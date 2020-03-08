@@ -18,5 +18,7 @@ security:
         api:
             pattern: ^/api/v1.0
             stateless: true
-            anonymous: true
-            provider: api_user_provider
+            anonymous: false
+            guard:
+                authenticators:
+                    - App\Security\AuthServiceAuthenticator

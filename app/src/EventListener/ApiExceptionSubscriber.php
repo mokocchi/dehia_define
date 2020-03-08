@@ -84,6 +84,24 @@ class ApiExceptionSubscriber implements EventSubscriberInterface
                     $devMessage,
                     $usrMessage
                 );
+            } elseif ($e instanceof HttpException) {
+                if ($e->getStatusCode() == 401) {
+                    $devMessage = "No se recibió información de autorización";
+                    $usrMessage = "No autorizado";
+                    $apiProblem = new ApiProblem(
+                        $e->getStatusCode(),
+                        $devMessage,
+                        $usrMessage
+                    );
+                } else {
+                    $devMessage = "Ocurrió un error";
+                    $usrMessage = "Ocurrió un error";
+                    $apiProblem = new ApiProblem(
+                        $e->getStatusCode(),
+                        $devMessage,
+                        $usrMessage
+                    );
+                }
             } else {
                 $devMessage = "Ocurrió un error";
                 $usrMessage = "Ocurrió un error";
