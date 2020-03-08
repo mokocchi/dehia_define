@@ -105,33 +105,10 @@ class ApiExceptionSubscriber implements EventSubscriberInterface
         $event->setResponse($response);
     }
 
-    public function onKernelResponse(ResponseEvent $e)
-    {
-        /** @var Response $response */
-        $response = $e->getResponse();
-        $data = json_decode($response->getContent(), true);
-        if ($data) {
-            if (is_array($data) && array_key_exists("error", $data)) {
-                $this->logger->error(implode(",", $data));
-                if ($data["error"] == OAuth2::ERROR_INVALID_GRANT) {
-                    $devMessage = "El token expiró o es inválido";
-                    $usrMessage = "Ocurrió un error de autenticación";
-                } else {
-                    $devMessage = "Error desconocido";
-                    $usrMessage = "Ocurrió un error";
-                }
-
-                $apiProblem = new ApiProblem($response->getStatusCode(), $devMessage, $usrMessage); 
-                $e->setResponse($this->apiResponseFactory->createResponse($apiProblem));
-            }
-        }
-    }
-
     public static function getSubscribedEvents()
     {
         return array(
-            KernelEvents::EXCEPTION => 'onKernelException',
-            KernelEvents::RESPONSE => 'onKernelResponse'
+            KernelEvents::EXCEPTION => 'onKernelException'
         );
     }
 }
