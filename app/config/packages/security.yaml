@@ -1,0 +1,22 @@
+security:
+    encoders:
+        App\Entity\User:
+            algorithm: sha512
+
+    providers:
+        api_user_provider:
+            entity:
+                class: App\Entity\Autor
+                property: email
+
+    firewalls:
+        public_api:
+            pattern: ^/api/v1.0/public
+            stateless: true
+            anonymous: true
+            
+        api:
+            pattern: ^/api/v1.0
+            stateless: true
+            anonymous: true
+            provider: api_user_provider
