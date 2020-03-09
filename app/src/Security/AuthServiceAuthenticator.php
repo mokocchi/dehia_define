@@ -78,10 +78,13 @@ class AuthServiceAuthenticator extends AbstractGuardAuthenticator
             $autor = new Autor();
             $autor->setNombre($data["nombre"]);
             $autor->setApellido($data["apellido"]);
-            $autor->addRoles($data["role"]);
             $autor->setEmail($data["email"]);
             $autor->setGoogleid($data["googleid"]);
+            $this->em->persist($autor);
+            $this->em->flush();
         }
+        $autor->addRoles($data["role"]);
+
         return $autor;
     }
 
