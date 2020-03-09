@@ -82,6 +82,7 @@ class AuthServiceAuthenticator extends AbstractGuardAuthenticator
             $autor->setEmail($data["email"]);
             $autor->setGoogleid($data["googleid"]);
         }
+        return $autor;
     }
 
     public function checkCredentials($credentials, UserInterface $user)
