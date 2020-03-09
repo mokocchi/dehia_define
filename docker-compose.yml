@@ -4,11 +4,17 @@ services:
     container_name: define.mysql
     image: mysql:8.0
     restart: on-failure
+    expose: 
+      - 3306
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
-    networks: 
-      - dehia
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    networks:
+      backend:
+        aliases:
+          - define.mysql
 
   define.php:
     container_name: define.php
@@ -17,8 +23,13 @@ services:
       dockerfile: docker/php/Dockerfile
     restart: on-failure
     user: ${LOCAL_USER}
-    networks:
-      - dehia
+    expose: 
+      - 9000
+    networks: 
+      dehia:
+      backend:
+        aliases:
+          - define.php
 
   define.nginx:
     container_name: define.nginx
@@ -27,15 +38,20 @@ services:
     depends_on:
       - define.php
     networks:
-      - dehia
+      backend:
+      dehia:
+        aliases:
+          - define.nginx
 
   define.adminer:
     container_name: define.adminer
     image: adminer
     restart: on-failure
     networks: 
-      - dehia
+      - backend
 
-networks: 
+networks:
   dehia:
     external: true
+  backend:
+    external: false

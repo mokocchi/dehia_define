@@ -54,12 +54,12 @@ class AuthServiceAuthenticator extends AbstractGuardAuthenticator
 
         $client = new \GuzzleHttp\Client(
             [
-                'base_uri' => 'http://localhost:81/'
+                'base_uri' => 'http://auth.nginx/'
             ]
         );
 
         try {
-            $response = $client->post("/validate", ["headers" => ["Authorization" => $credentials]]);
+            $response = $client->get("/api/validate", ["headers" => ["Authorization" => $credentials]]);
             $data = json_decode((string) $response->getBody(), true);
         } catch (Exception $e) {
             $this->logger->error($e->getMessage());
