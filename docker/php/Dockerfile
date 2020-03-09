@@ -23,4 +23,4 @@ COPY . /usr/src/app
 
 RUN PATH=$PATH:/usr/src/apps/vendor/bin:bin
 
-RUN mkdir /.composer && chown 1000 /.composer && chgrp 1000 /.composer
+RUN mkdir /.composer && chown 1001 /.composer && chgrp 1001 /.composer
