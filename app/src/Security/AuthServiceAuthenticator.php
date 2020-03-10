@@ -10,6 +10,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -54,7 +55,7 @@ class AuthServiceAuthenticator extends AbstractGuardAuthenticator
 
         $client = new \GuzzleHttp\Client(
             [
-                'base_uri' => 'http://auth.nginx/'
+                'base_uri' => $_ENV["AUTH_BASE_URL"]
             ]
         );
 
@@ -65,9 +66,19 @@ class AuthServiceAuthenticator extends AbstractGuardAuthenticator
             $this->logger->error($e->getMessage());
             throw new ApiProblemException(
                 new ApiProblem(
-                    "500",
+                    Response::HTTP_INTERNAL_SERVER_ERROR,
                     "Ocurrió un error en la autenticación",
                     "Ocurrió un error"
+                )
+            );
+        }
+
+        if($data["role"] != "ROLE_AUTOR") {
+            throw new ApiProblemException(
+                new ApiProblem(
+                    Response::HTTP_FORBIDDEN,
+                    "El token no pertenece a un autor",
+                    "Ocurrió un error en la autenticación"
                 )
             );
         }
