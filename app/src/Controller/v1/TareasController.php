@@ -470,7 +470,13 @@ class TareasController extends BaseController
     public function updateMapOnTareaAction(Request $request, $id, UploaderHelper $uploaderHelper, ValidatorInterface $validator)
     {
         if (!$request->files->has('plano')) {
-            return $this->handleView($this->view(['errors' => 'No se encontró el archivo'], Response::HTTP_BAD_REQUEST));
+            throw new ApiProblemException(
+                new ApiProblem(
+                    Response::HTTP_BAD_REQUEST,
+                    "No se encontró el archivo",
+                    "No se encontró el archivo"
+                )
+            );
         }
         $plano = new Plano();
         $uploadedFile = $request->files->get('plano');
@@ -480,10 +486,9 @@ class TareasController extends BaseController
 
         if (count($errors) > 0) {
             $this->logger->alert("Archivo inválido: " . json_decode($errors));
-            return $this->handleView($this->view(
-                new ApiProblem(Response::HTTP_BAD_REQUEST, "Se recibió una imagen inválida", "Imagen inválida"),
-                Response::HTTP_BAD_REQUEST
-            ));
+            throw new ApiProblemException(
+                new ApiProblem(Response::HTTP_BAD_REQUEST, "Se recibió una imagen inválida", "Imagen inválida")
+            );
         }
         $tarea = $this->checkTareaFound($id);
         $this->denyAccessUnlessGranted(TareaVoter::OWN, $tarea);
