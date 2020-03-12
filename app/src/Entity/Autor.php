@@ -142,7 +142,7 @@ class Autor implements UserInterface
         return $roles;
     }
 
-    public function addRoles(string $role)
+    public function addRole(string $role)
     {
         $this->roles[] = $role;
     }

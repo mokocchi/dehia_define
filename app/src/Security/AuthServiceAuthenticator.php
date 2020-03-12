@@ -94,7 +94,7 @@ class AuthServiceAuthenticator extends AbstractGuardAuthenticator
             $this->em->persist($autor);
             $this->em->flush();
         }
-        $autor->addRoles($data["role"]);
+        $autor->addRole($data["role"]);
 
         return $autor;
     }
