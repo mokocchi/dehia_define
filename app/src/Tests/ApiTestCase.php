@@ -72,7 +72,7 @@ class ApiTestCase extends KernelTestCase
             "email" => $email,
             "nombre" => "Pedro",
             "apellido" => "Sánchez",
-            "googleid" => "2000",
+            "googleid" => "1001",
             "role" => "ROLE_AUTOR"
         ]);
     }
@@ -83,7 +83,7 @@ class ApiTestCase extends KernelTestCase
             "email" => "$email",
             "nombre" => "María",
             "apellido" => "Del Carril",
-            "googleid" => "3000",
+            "googleid" => "2001",
             "role" => "ROLE_USUARIO_APP"
         ]);
     }
@@ -206,8 +206,10 @@ class ApiTestCase extends KernelTestCase
     protected static function removeUsuario($email)
     {
         $usuario = self::$em->getRepository(Autor::class)->findOneBy(["email" => $email]);
-        self::$em->remove($usuario);
-        self::$em->flush();
+        if ($usuario) {
+            self::$em->remove($usuario);
+            self::$em->flush();
+        }
     }
 
     protected function tearDown(): void
@@ -300,7 +302,7 @@ class ApiTestCase extends KernelTestCase
             }
             $this->fail("No se detectó una petición sin permisos suficientes");
         } catch (RequestException $e) {
-            $this->assertErrorResponse($e->getResponse(), Response::HTTP_FORBIDDEN, "No tenés los permisos suficientes para acceder al recurso");
+            $this->assertErrorResponse($e->getResponse(), Response::HTTP_FORBIDDEN, "El token no pertenece a un autor");
         }
     }
 

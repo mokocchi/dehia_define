@@ -8,6 +8,7 @@ use App\Api\ApiProblemResponseFactory;
 use App\Entity\Autor;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
+use GuzzleHttp\Exception\RequestException;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -63,17 +64,29 @@ class AuthServiceAuthenticator extends AbstractGuardAuthenticator
             $response = $client->get("/api/validate", ["headers" => ["Authorization" => $credentials]]);
             $data = json_decode((string) $response->getBody(), true);
         } catch (Exception $e) {
-            $this->logger->error($e->getMessage());
-            throw new ApiProblemException(
-                new ApiProblem(
-                    Response::HTTP_INTERNAL_SERVER_ERROR,
-                    "Ocurrió un error en la autenticación",
-                    "Ocurrió un error"
-                )
-            );
+            if($e instanceof RequestException) {
+                $response = $e->getResponse();
+                $data = json_decode((string) $response->getBody(), true);
+                throw new ApiProblemException(
+                    new ApiProblem(
+                        $response->getStatusCode(),
+                        $data["developer_message"],
+                        $data["user_message"]
+                    )
+                );
+            } else {
+                $this->logger->error($e->getMessage());
+                throw new ApiProblemException(
+                    new ApiProblem(
+                        Response::HTTP_INTERNAL_SERVER_ERROR,
+                        "Ocurrió un error en la autenticación",
+                        "Ocurrió un error"
+                    )
+                );
+            }
         }
 
-        if($data["role"] != "ROLE_AUTOR") {
+        if ($data["role"] != "ROLE_AUTOR") {
             throw new ApiProblemException(
                 new ApiProblem(
                     Response::HTTP_FORBIDDEN,
@@ -122,7 +135,7 @@ class AuthServiceAuthenticator extends AbstractGuardAuthenticator
     {
         return $this->apiProblemResponseFactory->createResponse(new ApiProblem(
             "401",
-            "No autorizado",
+            "Se requiere autenticación OAuth",
             "No autorizado"
         ));
     }
