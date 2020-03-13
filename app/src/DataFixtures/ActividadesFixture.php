@@ -38,7 +38,7 @@ class ActividadesFixture extends BaseFixture
         }
         $actividad->setEstado($estado);
         if (!array_key_exists("autor", $actividad_array)) {
-            $autor = $manager->getRepository(Autor::class)->findOneBy(["email" => "autor@autores.demo"]);
+            $autor = $manager->getRepository(Autor::class)->findOneBy(["email" => "autor1@dehia.net"]);
             $actividad->setAutor($autor);
         } else {
             $autor = $manager->getRepository(Autor::class)->findOneBy(["email" => $actividad_array["autor"]]);

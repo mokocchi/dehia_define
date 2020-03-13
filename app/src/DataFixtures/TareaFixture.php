@@ -63,7 +63,7 @@ class TareaFixture extends BaseFixture
 
             $tarea->setCodigo($this->faker->sha256);
 
-            $autor = $manager->getRepository(Autor::class)->findOneBy(["email" => "autor@autores.demo"]);
+            $autor = $manager->getRepository(Autor::class)->findOneBy(["email" => "autor1@dehia.net"]);
             $tarea->setAutor($autor);
 
             $this->fakeUploadImage($tarea->getCodigo());
@@ -73,9 +73,15 @@ class TareaFixture extends BaseFixture
         $manager->flush();
 
         $tareas = $manager->getRepository(Tarea::class)->findBy(["consigna" => "Tarea libre!"]);
-        $actividad = $manager->getRepository(Actividad::class)->find(2);
+        $actividad = $manager->getRepository(Actividad::class)->find(1);
         $actividad->addTarea($tareas[0]);
         $actividad->addTarea($tareas[1]);
+        $manager->persist($actividad);
+        $manager->flush();
+
+        $actividad = $manager->getRepository(Actividad::class)->find(2);
+        $actividad->addTarea($tareas[0]);
+        $actividad->addTarea($tareas[3]);
         $actividad->addTarea($tareas[2]);
         $actividad->addTarea($tareas[3]);
         $actividad->addTarea($tareas[4]);

@@ -66,14 +66,25 @@ class AuthServiceAuthenticator extends AbstractGuardAuthenticator
         } catch (Exception $e) {
             if($e instanceof RequestException) {
                 $response = $e->getResponse();
-                $data = json_decode((string) $response->getBody(), true);
-                throw new ApiProblemException(
-                    new ApiProblem(
-                        $response->getStatusCode(),
-                        $data["developer_message"],
-                        $data["user_message"]
-                    )
-                );
+                if(!is_null($response)) {
+                    $data = json_decode((string) $response->getBody(), true);
+                    throw new ApiProblemException(
+                        new ApiProblem(
+                            $response->getStatusCode(),
+                            $data["developer_message"],
+                            $data["user_message"]
+                        )
+                    );
+                } else {
+                    $this->logger->error($e->getMessage());
+                    throw new ApiProblemException(
+                        new ApiProblem(
+                            Response::HTTP_INTERNAL_SERVER_ERROR,
+                            "Ocurrió un error en la autenticación",
+                            "Ocurrió un error"
+                        )
+                    );
+                }
             } else {
                 $this->logger->error($e->getMessage());
                 throw new ApiProblemException(
@@ -86,7 +97,7 @@ class AuthServiceAuthenticator extends AbstractGuardAuthenticator
             }
         }
 
-        if ($data["role"] != "ROLE_AUTOR") {
+        if (!in_array("ROLE_AUTOR", $data["roles"])) {
             throw new ApiProblemException(
                 new ApiProblem(
                     Response::HTTP_FORBIDDEN,
@@ -107,7 +118,9 @@ class AuthServiceAuthenticator extends AbstractGuardAuthenticator
             $this->em->persist($autor);
             $this->em->flush();
         }
-        $autor->addRole($data["role"]);
+        foreach($data["roles"] as $role) {   
+            $autor->addRole($role);
+        }
 
         return $autor;
     }

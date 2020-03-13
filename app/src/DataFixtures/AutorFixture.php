@@ -11,10 +11,10 @@ class AutorFixture extends Fixture
     public function load(ObjectManager $manager)
     {
         $autor = new Autor();
-        $autor->setEmail("autor@autores.demo");
+        $autor->setEmail("autor1@dehia.net");
         $autor->setNombre("Autor");
         $autor->setApellido("Autórez");
-        $autor->setGoogleid("20000");
+        $autor->setGoogleid("1001");
         $manager->persist($autor);
         $manager->flush();
     }
