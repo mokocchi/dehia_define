@@ -81,6 +81,7 @@ class TareaFixture extends BaseFixture
 
         $actividad = $manager->getRepository(Actividad::class)->find(2);
         $actividad->addTarea($tareas[0]);
+        $actividad->addTarea($tareas[1]);
         $actividad->addTarea($tareas[3]);
         $actividad->addTarea($tareas[2]);
         $actividad->addTarea($tareas[3]);
@@ -90,6 +91,22 @@ class TareaFixture extends BaseFixture
         $actividad->addTarea($tareas[7]);
         $actividad->addTarea($tareas[8]);
         $actividad->addTarea($tareas[9]);
+        $manager->persist($actividad);
+        $manager->flush();
+
+        $actividad = $manager->getRepository(Actividad::class)->find(4);
+        $actividad->addTarea($tareas[0]);
+        $actividad->addTarea($tareas[1]);
+        $actividad->addTarea($tareas[3]);
+        $actividad->addTarea($tareas[2]);
+        $actividad->addTarea($tareas[3]);
+        $actividad->addTarea($tareas[4]);
+        $actividad->addTarea($tareas[5]);
+        $actividad->addTarea($tareas[6]);
+        $actividad->addTarea($tareas[7]);
+        $actividad->addTarea($tareas[8]);
+        $actividad->addTarea($tareas[9]);
+        
         $manager->persist($actividad);
         $manager->flush();
     }
