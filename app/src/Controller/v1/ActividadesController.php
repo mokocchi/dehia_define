@@ -17,6 +17,7 @@ use App\Pagination\PaginationFactory;
 use App\Repository\ActividadRepository;
 use App\Security\Voter\ActividadVoter;
 use App\Security\Voter\TareaVoter;
+use Doctrine\ORM\EntityManager;
 use FOS\RestBundle\Controller\Annotations as Rest;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -126,14 +127,14 @@ class ActividadesController extends BaseController
         return $this->handleView($this->getViewWithGroups($paginatedCollection, "autor"));
     }
 
-    private function checkCodigoNotUsed($codigo)
+    private function checkCodigoNotUsed($codigo, $em = null)
     {
-        $this->checkPropertyNotUsed(Actividad::class, "codigo", $codigo, "Ya existe una actividad con el mismo código");
+        $this->checkPropertyNotUsed(Actividad::class, "codigo", $codigo, "Ya existe una actividad con el mismo código", $em);
     }
 
-    private function checkActividadFound($id)
+    private function checkActividadFound($id, $em = null)
     {
-        return $this->checkEntityFound(Actividad::class, $id);
+        return $this->checkEntityFound(Actividad::class, $id, null, $em);
     }
 
     private function checkTareaFound($id)
@@ -196,11 +197,11 @@ class ActividadesController extends BaseController
      * @SWG\Tag(name="Actividad")
      * @return Response
      */
-    public function showActividadAction($id)
+    public function showActividadAction($id, Request $request = null, EntityManager $em = null)
     {
-        $actividad = $this->checkActividadFound($id);
+        $actividad = $this->checkActividadFound($id, $em);
         $this->denyAccessUnlessGranted(ActividadVoter::ACCESS, $actividad);
-        return $this->handleView($this->getViewWithGroups($actividad, "autor"));
+        return $this->getViewHandler()->handle($this->getViewWithGroups($actividad, "autor"), $request);
     }
 
     /**
@@ -308,17 +309,19 @@ class ActividadesController extends BaseController
      * 
      * @return Response
      */
-    public function postActividadAction(Request $request)
+    public function postActividadAction(Request $request, EntityManager $em = null)
     {
         $actividad = new Actividad();
         $form = $this->createForm(ActividadType::class, $actividad);
         $data = $this->getJsonData($request);
         $this->checkRequiredParameters(["nombre", "objetivo", "codigo", "dominio", "idioma", "tipoPlanificacion", "estado"], $data);
-        $this->checkCodigoNotUsed($data["codigo"]);
+        $this->checkCodigoNotUsed($data["codigo"], $em);
         $form->submit($data);
         $this->checkFormValidity($form);
-
-        $em = $this->getDoctrine()->getManager();
+        
+        if (is_null($em)) {
+            $em = $this->getDoctrine()->getManager();
+        }
         $planificacion = new Planificacion();
         $em->persist($planificacion);
         $actividad->setPlanificacion($planificacion);
@@ -326,8 +329,8 @@ class ActividadesController extends BaseController
         $em->persist($actividad);
         $em->flush();
 
-        $url = $this->generateUrl('show_actividad', ['id' => $actividad->getId()]);
-        return $this->handleView($this->setGroupToView($this->view($actividad, Response::HTTP_CREATED, ["Location" => $url]), "autor"));
+        $url = $this->generateUrl('show_actividad', ['id' => $actividad->getId() ?: 0]);
+        return $this->getViewHandler()->handle($this->setGroupToView($this->view($actividad, Response::HTTP_CREATED, ["Location" => $url]), "autor"), $request);
     }
 
     /**
@@ -425,10 +428,10 @@ class ActividadesController extends BaseController
      * 
      * @return Response
      */
-    public function patchActividadAction(Request $request, $id)
+    public function patchActividadAction(Request $request, $id, EntityManager $em = null)
     {
         /** @var Actividad $actividad */
-        $actividad = $this->checkActividadFound($id);
+        $actividad = $this->checkActividadFound($id, $em);
         $this->denyAccessUnlessGranted(ActividadVoter::OWN, $actividad);
         $data = $this->getJsonData($request);
 
@@ -444,7 +447,9 @@ class ActividadesController extends BaseController
             $actividad->setObjetivo($data["objetivo"]);
         }
 
-        $em = $this->getDoctrine()->getManager();
+        if (is_null($em)) {
+            $em = $this->getDoctrine()->getManager();
+        }
 
         if (array_key_exists("dominio", $data) && !is_null($data["dominio"])) {
             $dominio = $em->getRepository(Dominio::class)->find($data["dominio"]);

@@ -83,9 +83,11 @@ abstract class BaseController extends AbstractFOSRestController
         }
     }
 
-    protected function checkEntityFound($class, $id, $property = null)
+    protected function checkEntityFound($class, $id, $property = null, $em = null)
     {
-        $em = $this->getDoctrine()->getManager();
+        if (is_null($em)) {
+            $em = $this->getDoctrine()->getManager();
+        }
         if ($property) {
             $entity = $em->getRepository($class)->findOneBy([$property => $id]);
         } else {

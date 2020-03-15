@@ -16,7 +16,7 @@ use JMS\Serializer\Annotation\Expose;
  * @Link(
  *  "self",
  *  route = "show_actividad",
- *  params = { "id": "object.getId()" }
+ *  params = { "id": "object.getId() ?: 0" }
  * )
  */
 class Actividad
@@ -109,6 +109,12 @@ class Actividad
     public function getId(): ?int
     {
         return $this->id;
+    }
+
+    public function setId(int $id): self
+    {
+        $this->id = $id;
+        return $this;
     }
 
     public function getNombre(): ?string
