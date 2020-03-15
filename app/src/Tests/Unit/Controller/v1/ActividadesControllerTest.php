@@ -2,16 +2,19 @@
 
 namespace App\Tests\Controller\v1;
 
+use App\Api\ApiProblemException;
 use App\Controller\v1\ActividadesController;
 use App\Entity\Actividad;
 use App\Entity\Autor;
 use App\Entity\Dominio;
+use App\Entity\Estado;
 use App\Entity\Idioma;
 use App\Entity\Planificacion;
 use App\Entity\TipoPlanificacion;
 use App\Repository\ActividadRepository;
 use App\Tests\Support\Database;
 use App\Tests\Support\Kernel;
+use App\Tests\Support\Router;
 use Doctrine\ORM\EntityManager;
 use JMS\Serializer\SerializerInterface;
 use PHPUnit\Framework\TestCase;
@@ -22,7 +25,7 @@ use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
 class ActividadesControllerTest extends TestCase
 {
     use Kernel;
-    use Database;
+    use Router;
 
     /** @var LoggerInterface&MockObject $loggerMock */
     private $loggerMock;
@@ -106,6 +109,29 @@ class ActividadesControllerTest extends TestCase
         $this->assertEquals("Actividad test", $data["nombre"]);
     }
 
+    public function testPostActividadNoJson()
+    {
+        $request = new Request();
+        /** @var EntityManager&MockObject $entityManagerMock */
+        $entityManagerMock = $this->createMock(EntityManager::class);
+        $entityManagerMock
+            ->expects($this->never())
+            ->method('persist');
+        $entityManagerMock
+            ->expects($this->never())
+            ->method('flush');
+
+        $controller = new ActividadesController($this->loggerMock, $this->serializerMock);
+        $controller->setContainer(static::$container);
+        try {
+            $controller->postActividadAction($request, $entityManagerMock);
+        } catch (ApiProblemException $e) {
+            $apiProblem = $e->getApiProblem();
+            $this->assertEquals("No hay campos en el json", $apiProblem->getDeveloperMessage());
+            $this->assertEquals("Hubo un problema con la petición", $apiProblem->getUserMessage());
+        }
+    }
+
     public function testShowActividadAction()
     {
         $request = new Request();
@@ -133,13 +159,18 @@ class ActividadesControllerTest extends TestCase
         $tipoPlanificacion = new TipoPlanificacion();
         $tipoPlanificacion->setId(0);
         $tipoPlanificacion->setNombre("Circular");
+        $actividad->setTipoPlanificacion($tipoPlanificacion);
+
+        $estado = new Estado();
+        $estado->setNombre("Privado");
+        $actividad->setEstado($estado);
 
         $planificacion = new Planificacion();
         $planificacion->setId(0);
+        $actividad->setPlanificacion($planificacion);
 
         $autor = new Autor();
-        $autor->setGoogleid("1234");
-
+        $autor->setNombre("Autor");
         $actividad->setAutor($autor);
 
         /** @var ActividadRepository&MockObject $actividadArray */
@@ -161,7 +192,31 @@ class ActividadesControllerTest extends TestCase
         $controller->setContainer(static::$container);
         $result = $controller->showActividadAction($id, $request, $entityManagerMock);
         $data = json_decode($result->getContent(), true);
-        $this->assertArrayHasKey("nombre", $data);
+        $this->assertEquals(
+            [
+                "id",
+                "nombre",
+                "objetivo",
+                "idioma",
+                "dominio",
+                "tipo_planificacion",
+                "autor",
+                "estado",
+                "codigo",
+                "_links"
+            ], array_keys($data)
+        );
+        $this->assertNotNull($data["id"]);
         $this->assertEquals("Actividad test", $data["nombre"]);
+        $this->assertEquals("Probar la consulta de actividades", $data["objetivo"]);
+        $this->assertEquals("1234", $data["codigo"]);
+        $this->assertEquals("Test", $data["dominio"]["nombre"]);
+        $this->assertEquals("fr", $data["idioma"]["code"]);
+        $this->assertEquals("Circular", $data["tipo_planificacion"]["nombre"]);
+        $this->assertEquals("Privado", $data["estado"]["nombre"]);
+        $this->assertEquals("Autor", $data["autor"]["nombre"]);
+        $this->assertEquals($this->generateUrl("show_actividad", ["id" => $data["id"]]), $data['_links']['self']);
     }
+
+    
 }
