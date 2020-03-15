@@ -11,7 +11,7 @@ trait Router
      */
     public function generateUrl(string $route, array $parameters = []): string
     {
-        return Kernel::$container
+        return self::$container
             ->get('router')
             ->generate($route, $parameters);
     }
