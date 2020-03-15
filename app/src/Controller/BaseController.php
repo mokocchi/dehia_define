@@ -41,8 +41,8 @@ abstract class BaseController extends AbstractFOSRestController
     {
         throw new ApiProblemException(
             new ApiProblem(
-                Response::HTTP_INTERNAL_SERVER_ERROR,
-                $this->serializer->serialize($variable?:"null", "json"),
+                Response::HTTP_I_AM_A_TEAPOT,
+                $this->serializer->serialize($variable ?: "null", "json"),
                 "error"
             )
         );
@@ -59,10 +59,12 @@ abstract class BaseController extends AbstractFOSRestController
         return $data;
     }
 
-    protected function checkPropertyNotUsed($class, $property, $value, $message)
+    protected function checkPropertyNotUsed($class, $property, $value, $message, $em = null)
     {
-        $entityDb = $this->getDoctrine()->getRepository($class)->findOneBy([$property => $value]);
-
+        if (is_null($em)) {
+            $em = $this->getDoctrine();
+        }
+        $entityDb = $em->getRepository($class)->findOneBy([$property => $value]);
         if (!is_null($entityDb)) {
             throw new ApiProblemException(
                 new ApiProblem(Response::HTTP_BAD_REQUEST, $message, $message)
@@ -81,7 +83,7 @@ abstract class BaseController extends AbstractFOSRestController
         }
     }
 
-    protected function checkEntityFound($class, $id, $property=null)
+    protected function checkEntityFound($class, $id, $property = null)
     {
         $em = $this->getDoctrine()->getManager();
         if ($property) {
@@ -109,7 +111,8 @@ abstract class BaseController extends AbstractFOSRestController
         }
     }
 
-    protected function checkIsArray($property, $propertyName) {
+    protected function checkIsArray($property, $propertyName)
+    {
         if (!is_array($property)) {
             throw new ApiProblemException(
                 new ApiProblem(Response::HTTP_BAD_REQUEST, sprintf("El campo %s tiene que ser un array", $propertyName), "Hubo un problema con la petición")

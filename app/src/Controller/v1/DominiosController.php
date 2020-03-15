@@ -10,6 +10,7 @@ use App\Entity\Dominio;
 use App\Entity\Tarea;
 use App\Form\DominioType;
 use App\Repository\TareaRepository;
+use Doctrine\ORM\EntityManager;
 use Exception;
 use FOS\RestBundle\Controller\Annotations as Rest;
 use Symfony\Component\HttpFoundation\Request;
@@ -23,9 +24,9 @@ use Swagger\Annotations as SWG;
  */
 class DominiosController extends BaseController
 {
-    private function checkNombreNotUsed($nombre)
+    private function checkNombreNotUsed($nombre, $em = null)
     {
-        $this->checkPropertyNotUsed(Dominio::class, "nombre", $nombre, "Ya existe un dominio con el mismo nombre");
+        $this->checkPropertyNotUsed(Dominio::class, "nombre", $nombre, "Ya existe un dominio con el mismo nombre", $em);
     }
 
     /**
@@ -76,7 +77,7 @@ class DominiosController extends BaseController
      * @SWG\Tag(name="Dominio")
      * @return Response
      */
-    public function postDominioAction(Request $request)
+    public function postDominioAction(Request $request, EntityManager $em = null)
     {
         $dominio = new Dominio();
         $form = $this->createForm(DominioType::class, $dominio);
@@ -84,14 +85,17 @@ class DominiosController extends BaseController
         $this->checkRequiredParameters(["nombre"], $data);
         $form->submit($data);
         $this->checkFormValidity($form);
-        $this->checkNombreNotUsed($data["nombre"]);
+        $this->checkNombreNotUsed($data["nombre"], $em);
 
-        $em = $this->getDoctrine()->getManager();
+        if (is_null($em)) {
+            $em = $this->getDoctrine()->getManager();
+        }
         $em->persist($dominio);
         $em->flush();
-        
-        $url = $this->generateUrl("show_dominio", ["id" => $dominio->getId()]);
-        return $this->handleView($this->setGroupToView($this->view($dominio, Response::HTTP_CREATED, ["Location" => $url]), "select"));
+
+        $url = $this->generateUrl("show_dominio", ["id" => $dominio->getId() ?: 0]);
+        $view = $this->view($dominio, Response::HTTP_CREATED, ["Location" => $url]);
+        return $this->getViewHandler()->handle($this->setGroupToView($view, "select"), $request);
     }
 
     /**
