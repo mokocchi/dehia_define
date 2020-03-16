@@ -430,10 +430,10 @@ class ActividadesController extends BaseController
      */
     public function patchActividadAction(Request $request, $id, EntityManager $em = null)
     {
+        $data = $this->getJsonData($request);
         /** @var Actividad $actividad */
         $actividad = $this->checkActividadFound($id, $em);
         $this->denyAccessUnlessGranted(ActividadVoter::OWN, $actividad);
-        $data = $this->getJsonData($request);
 
         if (array_key_exists("codigo", $data)) {
             throw new ApiProblemException(
