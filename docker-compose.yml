@@ -16,6 +16,22 @@ services:
         aliases:
           - define.mysql
 
+  define.mysql.test:
+    container_name: define.mysql.test
+    image: mysql:8.0
+    restart: on-failure
+    expose: 
+      - 3306
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_TEST_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_TEST_DATABASE}
+      MYSQL_USER: ${MYSQL_TEST_USER}
+      MYSQL_PASSWORD: ${MYSQL_TEST_PASSWORD}
+    networks:
+      backend:
+        aliases:
+          - define.mysql.test
+
   define.php:
     container_name: define.php
     build:
