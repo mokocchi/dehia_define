@@ -480,7 +480,7 @@ class ActividadesController extends BaseController
         }
         $em->persist($actividad);
         $em->flush();
-        return $this->handleView($this->getViewWithGroups($actividad, "autor"));
+        return $this->getViewHandler()->handle($this->getViewWithGroups($actividad, "autor"), $request);
     }
 
     /**

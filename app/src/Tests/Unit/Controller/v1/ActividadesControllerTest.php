@@ -56,7 +56,7 @@ class ActividadesControllerTest extends TestCase
                     "nombre" => $actividadArray["nombre"],
                     "objetivo" => $actividadArray["objetivo"],
                     "codigo" => $actividadArray["codigo"],
-                    "dominio" => 1,
+                    "dominio" => array_key_exists("dominio", $actividadArray) ? $actividadArray["dominio"] : 1,
                     "idioma" => 1,
                     "tipoPlanificacion" => 1,
                     "estado" => 2
@@ -70,6 +70,8 @@ class ActividadesControllerTest extends TestCase
 
         return $request;
     }
+
+    /* Test post */
 
     public function testPostActividadAction()
     {
@@ -124,6 +126,7 @@ class ActividadesControllerTest extends TestCase
         $controller->setContainer(static::$container);
         try {
             $controller->postActividadAction($request, $entityManagerMock);
+            $this->fail("No se detectó que no hay campos en el json");
         } catch (ApiProblemException $e) {
             $apiProblem = $e->getApiProblem();
             $this->assertEquals("No hay campos en el json", $apiProblem->getDeveloperMessage());
@@ -165,6 +168,7 @@ class ActividadesControllerTest extends TestCase
         $controller->setContainer(static::$container);
         try {
             $controller->postActividadAction($request, $entityManagerMock);
+            $this->fail("No se detectó que ya existe una actividad con el mismo código");
         } catch (ApiProblemException $e) {
             $apiProblem = $e->getApiProblem();
             $this->assertEquals("Ya existe una actividad con el mismo código", $apiProblem->getDeveloperMessage());
@@ -193,11 +197,129 @@ class ActividadesControllerTest extends TestCase
         $controller->setContainer(static::$container);
         try {
             $controller->postActividadAction($request, $entityManagerMock);
+            $this->fail("No se detectó que el nombre es null");
         } catch (ApiProblemException $e) {
             $apiProblem = $e->getApiProblem();
             $this->assertEquals("Uno o más de los campos requeridos falta o es nulo", $apiProblem->getDeveloperMessage());
             $this->assertEquals("Faltan datos", $apiProblem->getUserMessage());
         }
+    }
+
+    public function testPostActividadWrongData()
+    {
+        $request = $this->makeActividadAddRequest([
+            "nombre" => "Actividad test",
+            "objetivo" => "Probar cargar con un domino inexistente",
+            "codigo" => "1234",
+            "dominio" => 99
+        ]);
+
+        /** @var EntityManager&MockObject $entityManagerMock */
+        $entityManagerMock = $this->createMock(EntityManager::class);
+
+        /** @var ActividadRepository&MockObject $actividadArray */
+        $actividadRepositoryMock = $this->createMock(ActividadRepository::class);
+        $actividadRepositoryMock
+            ->expects($this->atLeastOnce())
+            ->method('findOneBy')
+            ->willReturn(null);
+
+        $entityManagerMock
+            ->expects($this->atLeastOnce())
+            ->method('getRepository')
+            ->willReturn($actividadRepositoryMock);
+        $entityManagerMock
+            ->expects($this->never())
+            ->method('persist');
+        $entityManagerMock
+            ->expects($this->never())
+            ->method('flush');
+        $controller = new ActividadesController($this->loggerMock, $this->serializerMock);
+        $controller->setContainer(static::$container);
+        try {
+            $controller->postActividadAction($request, $entityManagerMock);
+            $this->fail("No se detectó que el dominio no existe");
+        } catch (ApiProblemException $e) {
+            $apiProblem = $e->getApiProblem();
+            $this->assertEquals("Se recibieron datos inválidos", $apiProblem->getDeveloperMessage());
+            $this->assertEquals("Datos inválidos", $apiProblem->getUserMessage());
+        }
+    }
+
+    public function makeActividadPatchRequest($actividadArray)
+    {
+        $jsonArray = [];
+        if (array_key_exists("nombre", $actividadArray)) {
+            $jsonArray["nombre"] = $actividadArray["nombre"];
+        }
+        if (array_key_exists("codigo", $actividadArray)) {
+            $jsonArray["codigo"] = $actividadArray["codigo"];
+        }
+        $request = new Request(
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            json_encode($jsonArray)
+        );
+
+        $request->setMethod(Request::METHOD_PATCH);
+
+        $request->setRequestFormat('json');
+
+        return $request;
+    }
+
+    /* Test patch */
+    public function testPatchActividadAction()
+    {
+        $request = $this->makeActividadPatchRequest(["nombre" => "Actividad patch"]);
+
+        $actividad = new Actividad();
+        $actividad->setNombre("Actividad test");
+        $actividad->setObjetivo("Probar la modificación de actividades");
+        $actividad->setCodigo("1234");
+        
+        $autor = new Autor();
+        $actividad->setAutor($autor);
+
+        /** @var EntityManager&MockObject $entityManagerMock */
+        $entityManagerMock = $this->createMock(EntityManager::class);
+
+        /** @var ActividadRepository&MockObject $actividadArray */
+        $actividadRepositoryMock = $this->createMock(ActividadRepository::class);
+        $actividadRepositoryMock
+            ->expects($this->atLeastOnce())
+            ->method('find')
+            ->willReturn($actividad);
+
+        $entityManagerMock
+            ->expects($this->atLeastOnce())
+            ->method('getRepository')
+            ->willReturn($actividadRepositoryMock);
+        $entityManagerMock
+            ->expects($this->atLeastOnce())
+            ->method('persist');
+        $entityManagerMock
+            ->expects($this->atLeastOnce())
+            ->method('flush');
+
+        $token = new UsernamePasswordToken($autor, null, "test", ["ROLE_AUTOR"]);
+        self::$container->get('security.token_storage')->setToken($token);
+
+        $controller = new ActividadesController($this->loggerMock, $this->serializerMock);
+        $controller->setContainer(static::$container);
+
+        $result = $controller->patchActividadAction($request, 1, $entityManagerMock);
+        $data = json_decode($result->getContent(), true);
+        $this->assertArrayHasKey("nombre", $data);
+        $this->assertEquals("Actividad patch", $data["nombre"]);
+        $this->assertArrayHasKey("objetivo", $data);
+        $this->assertEquals("Probar la modificación de actividades", $data["objetivo"]);
+        $this->assertArrayHasKey("codigo", $data);
+        $this->assertEquals("1234", $data["codigo"]);
     }
 
     public function testShowActividadAction()
