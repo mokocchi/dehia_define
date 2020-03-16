@@ -76,9 +76,58 @@ class DominiosControllerTest extends TestCase
 
         $response = $httpClient->getResponse();
         $this->assertSame(400, $response->getStatusCode());
-        $data = json_decode($response->getContent(), true);
 
         $dominios = $repository->findBy(["nombre" => $nombre]);
         $this->assertEquals(1, count($dominios));
+    }
+
+    public function test_dominio_is_not_saved_when_unauthorized()
+    {
+        $httpClient = $this->createClient();
+        $repository = $this->entityManager->getRepository(Dominio::class);
+
+        $nombre = self::$dominioName;
+
+        $httpClient->request(
+            Request::METHOD_POST,
+            $this->generateUrl('post_dominio'),
+            [],
+            [],
+            [],
+            json_encode(
+                ["nombre" => $nombre]
+            )
+        );
+
+        $response = $httpClient->getResponse();
+        $this->assertSame(401, $response->getStatusCode());
+
+        $dominios = $repository->findBy(["nombre" => $nombre]);
+        $this->assertEquals(0, count($dominios));
+    }
+
+    public function test_dominio_is_not_saved_when_forbidden_role()
+    {
+        $httpClient = $this->createClient();
+        $repository = $this->entityManager->getRepository(Dominio::class);
+
+        $nombre = self::$dominioName;
+
+        $httpClient->request(
+            Request::METHOD_POST,
+            $this->generateUrl('post_dominio'),
+            [],
+            [],
+            ["HTTP_AUTHORIZATION" => "Bearer 3"],
+            json_encode(
+                ["nombre" => $nombre]
+            )
+        );
+
+        $response = $httpClient->getResponse();
+        $this->assertSame(403, $response->getStatusCode());
+
+        $dominios = $repository->findBy(["nombre" => $nombre]);
+        $this->assertEquals(0, count($dominios));
     }
 }

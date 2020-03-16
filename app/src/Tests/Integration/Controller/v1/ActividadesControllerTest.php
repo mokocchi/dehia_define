@@ -13,7 +13,7 @@ use Symfony\Component\HttpFoundation\Request;
 class ActividadesControllerTest extends TestCase
 {
     use Kernel, HttpClient, Router, Database;
-    public function test_dominio_is_saved_in_database_when_submitted_valid_form()
+    public function test_actividad_is_saved_in_database_when_submitted_valid_form()
     {
         $httpClient = $this->createClient();
 
