@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Tests\Controller\v1;
+namespace App\Tests\Unit\Controller\v1;
 
 use App\Api\ApiProblemException;
 use App\Controller\v1\ActividadesController;

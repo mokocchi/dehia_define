@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Tests\Controller\v1;
+namespace App\Tests\Unit\Controller\v1;
 
 use App\Api\ApiProblemException;
 use App\Controller\v1\DominiosController;
@@ -18,7 +18,6 @@ use Symfony\Component\HttpFoundation\Request;
 class DominiosControllerTest extends TestCase
 {
     use Kernel;
-    use Database;
 
     private static $dominioName = "Test";
 
