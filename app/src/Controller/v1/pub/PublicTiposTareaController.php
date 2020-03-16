@@ -4,10 +4,12 @@ namespace App\Controller\v1\pub;
 
 use App\Controller\BaseController;
 use App\Entity\TipoTarea;
+use Doctrine\ORM\EntityManager;
 use FOS\RestBundle\Controller\Annotations as Rest;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Swagger\Annotations as SWG;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * @Route("/tipos-tarea")
@@ -31,10 +33,13 @@ class PublicTiposTareaController extends BaseController
      * @SWG\Tag(name="Tipo Tarea")
      * @return Response
      */
-    public function getTipoTareaAction()
+    public function getTiposTareaAction(Request $request = null, EntityManager $em = null)
     {
-        $repository = $this->getDoctrine()->getRepository(TipoTarea::class);
+        if(is_null($em)) {
+            $em = $this->getDoctrine()->getManager();
+        }
+        $repository = $em->getRepository(TipoTarea::class);
         $tipostarea = $repository->findall();
-        return $this->handleView($this->getViewWithGroups(["results" => $tipostarea], "select"));
+        return $this->getViewHandler()->handle($this->getViewWithGroups(["results" => $tipostarea], "select"), $request);
     }
 }

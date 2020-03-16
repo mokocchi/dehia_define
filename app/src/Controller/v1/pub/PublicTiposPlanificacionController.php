@@ -4,15 +4,17 @@ namespace App\Controller\v1\pub;
 
 use App\Controller\BaseController;
 use App\Entity\TipoPlanificacion;
+use Doctrine\ORM\EntityManager;
 use FOS\RestBundle\Controller\Annotations as Rest;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Swagger\Annotations as SWG;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * @Route("/tipos-planificacion")
  */
-class PublicTipoPlanificacionController extends BaseController
+class PublicTiposPlanificacionController extends BaseController
 {
     /**
      * Lista todos los tipos de planificación
@@ -31,10 +33,13 @@ class PublicTipoPlanificacionController extends BaseController
      * @SWG\Tag(name="Tipo planificación")
      * @return Response
      */
-    public function getTipoPlanificacionAction()
+    public function getTiposPlanificacionAction(Request $request = null, EntityManager $em = null)
     {
-        $repository = $this->getDoctrine()->getRepository(TipoPlanificacion::class);
+        if (is_null($em)) {
+            $em = $this->getDoctrine()->getManager();
+        }
+        $repository = $em->getRepository(TipoPlanificacion::class);
         $tipoPlanificacion = $repository->findall();
-        return $this->handleView($this->getViewWithGroups(["results" => $tipoPlanificacion], "select"));
+        return $this->getViewHandler()->handle($this->getViewWithGroups(["results" => $tipoPlanificacion], "select"), $request);
     }
 }

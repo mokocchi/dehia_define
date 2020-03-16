@@ -4,10 +4,12 @@ namespace App\Controller\v1\pub;
 
 use App\Controller\BaseController;
 use App\Entity\Estado;
+use Doctrine\ORM\EntityManager;
 use FOS\RestBundle\Controller\Annotations as Rest;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Swagger\Annotations as SWG;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * @Route("/estados")
@@ -32,10 +34,13 @@ class PublicEstadosController extends BaseController
      * @SWG\Tag(name="Estado")
      * @return Response
      */
-    public function getEstadoAction()
+    public function getEstadosAction(Request $request = null, EntityManager $em = null)
     {
-        $repository = $this->getDoctrine()->getRepository(Estado::class);
+        if (is_null($em)) {
+            $em = $this->getDoctrine()->getManager();
+        }
+        $repository = $em->getRepository(Estado::class);
         $estado = $repository->findall();
-        return $this->handleView($this->getViewWithGroups(["results" => $estado], "select"));
+        return $this->getViewHandler()->handle($this->getViewWithGroups(["results" => $estado], "select"), $request);
     }
 }
