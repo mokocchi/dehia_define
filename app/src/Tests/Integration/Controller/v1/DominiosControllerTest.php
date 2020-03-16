@@ -14,7 +14,7 @@ class DominiosControllerTest extends TestCase
 {
     use Kernel, HttpClient, Router, Database;
 
-    private static $dominioName = "Pruebas";
+    private static $dominioName = "Test";
 
     protected function createDominio(string $nombre): int
     {
