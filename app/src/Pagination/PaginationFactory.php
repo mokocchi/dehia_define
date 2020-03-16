@@ -24,11 +24,11 @@ class PaginationFactory
         $pagerfanta = new Pagerfanta($adapter);
         $pagerfanta->setMaxPerPage(10);
         $pagerfanta->setCurrentPage($page);
-        $actividades = [];
+        $entities = [];
         foreach ($pagerfanta->getCurrentPageResults() as $result) {
-            $actividades[] = $result;
+            $entities[] = $result;
         }
-        $paginatedCollection = new PaginatedCollection($actividades, $pagerfanta->getNbResults());
+        $paginatedCollection = new PaginatedCollection($entities, $pagerfanta->getNbResults());
         $routeParams = array_merge($routeParams, $request->query->all());
         $createLinkUrl = function ($targetPage) use ($route, $routeParams) {
             return $this->router->generate($route, array_merge(

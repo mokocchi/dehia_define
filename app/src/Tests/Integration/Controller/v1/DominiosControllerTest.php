@@ -130,4 +130,76 @@ class DominiosControllerTest extends TestCase
         $dominios = $repository->findBy(["nombre" => $nombre]);
         $this->assertEquals(0, count($dominios));
     }
+
+    public function test_dominio_is_not_saved_when_given_wrong_token()
+    {
+        $httpClient = $this->createClient();
+        $repository = $this->entityManager->getRepository(Dominio::class);
+
+        $nombre = self::$dominioName;
+
+        $httpClient->request(
+            Request::METHOD_POST,
+            $this->generateUrl('post_dominio'),
+            [],
+            [],
+            ["HTTP_AUTHORIZATION" => "Bearer 0"],
+            json_encode(
+                ["nombre" => $nombre]
+            )
+        );
+
+        $response = $httpClient->getResponse();
+        $this->assertSame(401, $response->getStatusCode());
+
+        $dominios = $repository->findBy(["nombre" => $nombre]);
+        $this->assertEquals(0, count($dominios));
+    }
+
+    public function test_dominio_is_not_saved_when_no_json_sent()
+    {
+        $httpClient = $this->createClient();
+        $repository = $this->entityManager->getRepository(Dominio::class);
+
+        $nombre = self::$dominioName;
+
+        $httpClient->request(
+            Request::METHOD_POST,
+            $this->generateUrl('post_dominio'),
+            [],
+            [],
+            ["HTTP_AUTHORIZATION" => "Bearer 1"]
+        );
+
+        $response = $httpClient->getResponse();
+        $this->assertSame(400, $response->getStatusCode());
+
+        $dominios = $repository->findBy(["nombre" => $nombre]);
+        $this->assertEquals(0, count($dominios));
+    }
+
+    public function test_dominio_is_not_saved_when_no_name_sent()
+    {
+        $httpClient = $this->createClient();
+        $repository = $this->entityManager->getRepository(Dominio::class);
+
+        $nombre = self::$dominioName;
+
+        $httpClient->request(
+            Request::METHOD_POST,
+            $this->generateUrl('post_dominio'),
+            [],
+            [],
+            ["HTTP_AUTHORIZATION" => "Bearer 1"],
+            json_encode(
+                ["nombre" => null]
+            )
+        );
+
+        $response = $httpClient->getResponse();
+        $this->assertSame(400, $response->getStatusCode());
+
+        $dominios = $repository->findBy(["nombre" => $nombre]);
+        $this->assertEquals(0, count($dominios));
+    }
 }
