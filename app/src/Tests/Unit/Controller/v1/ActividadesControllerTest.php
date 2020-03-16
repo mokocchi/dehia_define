@@ -12,7 +12,6 @@ use App\Entity\Idioma;
 use App\Entity\Planificacion;
 use App\Entity\TipoPlanificacion;
 use App\Repository\ActividadRepository;
-use App\Tests\Support\Database;
 use App\Tests\Support\Kernel;
 use App\Tests\Support\Router;
 use Doctrine\ORM\EntityManager;
@@ -132,6 +131,75 @@ class ActividadesControllerTest extends TestCase
         }
     }
 
+    public function testPostActividadCodigoAlreadyExists()
+    {
+        $request = $this->makeActividadAddRequest([
+            "nombre" => "Actividad test",
+            "objetivo" => "Probar cargar un codigo repetido",
+            "codigo" => "1234"
+        ]);
+
+        /** @var EntityManager&MockObject $entityManagerMock */
+        $entityManagerMock = $this->createMock(EntityManager::class);
+
+        $actividad = new Actividad();
+
+        /** @var ActividadRepository&MockObject $actividadArray */
+        $actividadRepositoryMock = $this->createMock(ActividadRepository::class);
+        $actividadRepositoryMock
+            ->expects($this->atLeastOnce())
+            ->method('findOneBy')
+            ->willReturn($actividad);
+
+        $entityManagerMock
+            ->expects($this->atLeastOnce())
+            ->method('getRepository')
+            ->willReturn($actividadRepositoryMock);
+        $entityManagerMock
+            ->expects($this->never())
+            ->method('persist');
+        $entityManagerMock
+            ->expects($this->never())
+            ->method('flush');
+        $controller = new ActividadesController($this->loggerMock, $this->serializerMock);
+        $controller->setContainer(static::$container);
+        try {
+            $controller->postActividadAction($request, $entityManagerMock);
+        } catch (ApiProblemException $e) {
+            $apiProblem = $e->getApiProblem();
+            $this->assertEquals("Ya existe una actividad con el mismo código", $apiProblem->getDeveloperMessage());
+            $this->assertEquals("Ya existe una actividad con el mismo código", $apiProblem->getUserMessage());
+        }
+    }
+
+    public function testPostActividadCodigoWithoutParameter()
+    {
+        $request = $this->makeActividadAddRequest([
+            "nombre" => null,
+            "objetivo" => "Probar cargar sin un nombre",
+            "codigo" => "1234"
+        ]);
+
+        /** @var EntityManager&MockObject $entityManagerMock */
+        $entityManagerMock = $this->createMock(EntityManager::class);
+
+        $entityManagerMock
+            ->expects($this->never())
+            ->method('persist');
+        $entityManagerMock
+            ->expects($this->never())
+            ->method('flush');
+        $controller = new ActividadesController($this->loggerMock, $this->serializerMock);
+        $controller->setContainer(static::$container);
+        try {
+            $controller->postActividadAction($request, $entityManagerMock);
+        } catch (ApiProblemException $e) {
+            $apiProblem = $e->getApiProblem();
+            $this->assertEquals("Uno o más de los campos requeridos falta o es nulo", $apiProblem->getDeveloperMessage());
+            $this->assertEquals("Faltan datos", $apiProblem->getUserMessage());
+        }
+    }
+
     public function testShowActividadAction()
     {
         $request = new Request();
@@ -204,7 +272,8 @@ class ActividadesControllerTest extends TestCase
                 "estado",
                 "codigo",
                 "_links"
-            ], array_keys($data)
+            ],
+            array_keys($data)
         );
         $this->assertNotNull($data["id"]);
         $this->assertEquals("Actividad test", $data["nombre"]);
@@ -217,6 +286,4 @@ class ActividadesControllerTest extends TestCase
         $this->assertEquals("Autor", $data["autor"]["nombre"]);
         $this->assertEquals($this->generateUrl("show_actividad", ["id" => $data["id"]]), $data['_links']['self']);
     }
-
-    
 }
