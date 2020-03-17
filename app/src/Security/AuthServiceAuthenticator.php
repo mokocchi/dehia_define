@@ -8,6 +8,7 @@ use App\Api\ApiProblemResponseFactory;
 use App\Entity\Autor;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
+use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -23,12 +24,18 @@ class AuthServiceAuthenticator extends AbstractGuardAuthenticator
     private $em;
     private $apiProblemResponseFactory;
     private $logger;
+    private $client;
 
-    public function __construct(EntityManagerInterface $em, ApiProblemResponseFactory $apiProblemResponseFactory, LoggerInterface $logger)
+    public function __construct(EntityManagerInterface $em, ApiProblemResponseFactory $apiProblemResponseFactory, LoggerInterface $logger, Client $client = null)
     {
         $this->em = $em;
         $this->apiProblemResponseFactory = $apiProblemResponseFactory;
         $this->logger = $logger;
+        $this->client = $client ?: new \GuzzleHttp\Client(
+            [
+                'base_uri' => $_ENV["AUTH_BASE_URL"]
+            ]
+        );
     }
 
     public function supports(Request $request)
@@ -54,19 +61,13 @@ class AuthServiceAuthenticator extends AbstractGuardAuthenticator
             );
         }
 
-        $client = new \GuzzleHttp\Client(
-            [
-                'base_uri' => $_ENV["AUTH_BASE_URL"]
-            ]
-        );
-
         try {
-            $response = $client->get("/api/validate", ["headers" => ["Authorization" => $credentials]]);
+            $response = $this->client->get("/api/validate", ["headers" => ["Authorization" => $credentials]]);
             $data = json_decode((string) $response->getBody(), true);
         } catch (Exception $e) {
-            if($e instanceof RequestException) {
+            if ($e instanceof RequestException) {
                 $response = $e->getResponse();
-                if(!is_null($response)) {
+                if (!is_null($response)) {
                     $data = json_decode((string) $response->getBody(), true);
                     throw new ApiProblemException(
                         new ApiProblem(
@@ -118,7 +119,7 @@ class AuthServiceAuthenticator extends AbstractGuardAuthenticator
             $this->em->persist($autor);
             $this->em->flush();
         }
-        foreach($data["roles"] as $role) {   
+        foreach ($data["roles"] as $role) {
             $autor->addRole($role);
         }
 
