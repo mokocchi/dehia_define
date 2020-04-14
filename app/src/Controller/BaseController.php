@@ -75,7 +75,7 @@ abstract class BaseController extends AbstractFOSRestController
     protected function checkRequiredParameters(array $parameters, array $data)
     {
         foreach ($parameters as $parameter) {
-            if (!array_key_exists($parameter, $data) || is_null($data[$parameter])) {
+            if (!array_key_exists($parameter, $data) || is_null($data[$parameter]) || $data[$parameter] == "") {
                 throw new ApiProblemException(
                     new ApiProblem(Response::HTTP_BAD_REQUEST, "Uno o más de los campos requeridos falta o es nulo", "Faltan datos")
                 );
