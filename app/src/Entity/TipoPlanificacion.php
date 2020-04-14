@@ -18,14 +18,14 @@ class TipoPlanificacion
      * @ORM\GeneratedValue()
      * @ORM\Column(type="integer")
      * @Expose
-     * @Groups({"select"})
+     * @Groups({"autor","select"})
      */
     private $id;
 
     /**
      * @ORM\Column(type="string", length=255)
      * @Expose
-     * @Groups({"autor", "select"})
+     * @Groups({"autor", "select", "publico"})
      */
     private $nombre;
 

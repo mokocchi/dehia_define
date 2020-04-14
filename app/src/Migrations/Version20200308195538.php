@@ -31,7 +31,7 @@ final class Version20200308195538 extends AbstractMigration
         $this->addSql("INSERT INTO `tipo_tarea` (`id`, `nombre`, `codigo`) VALUES (1, 'Simple', 'simple'),"
             . "(2, 'Ingresar texto', 'textInput'), (3, 'Ingresar número', 'numberInput'),(4, 'Sacar foto', 'cameraInput'),"
             . "(5, 'Elegir una opción', 'select'),(6, 'Opción múltiple', 'multiple'),(7, 'Contadores', 'counters'),"
-            . "(8, 'Recolección', 'collect'),(9, 'Depósito', 'deposit'),(10, 'Localización', 'GPSInput')");
+            . "(8, 'Recolección', 'collect'),(9, 'Depósito', 'deposit'),(10, 'Localización', 'GPSInput'),(11, 'Grabar audio', 'audioInput')");
     }
 
     public function down(Schema $schema) : void
@@ -59,5 +59,6 @@ final class Version20200308195538 extends AbstractMigration
         $this->addSql("DELETE FROM `tipo_tarea` WHERE `tipo_tarea`.`id` = 8");
         $this->addSql("DELETE FROM `tipo_tarea` WHERE `tipo_tarea`.`id` = 9");
         $this->addSql("DELETE FROM `tipo_tarea` WHERE `tipo_tarea`.`id` = 10");
+        $this->addSql("DELETE FROM `tipo_tarea` WHERE `tipo_tarea`.`id` = 11");
     }
 }

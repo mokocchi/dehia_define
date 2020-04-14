@@ -26,7 +26,7 @@ class ActividadesFixture extends BaseFixture
         $actividad->setDominio($actividad_array["dominio"]);
         $idioma = $manager->getRepository(Idioma::class)->findOneBy(["code" => "es"]);
         $actividad->setIdioma($idioma);
-        $tipoPlanificacion = $manager->getRepository(TipoPlanificacion::class)->findOneBy(["nombre" => "Secuencial"]);
+        $tipoPlanificacion = $manager->getRepository(TipoPlanificacion::class)->findOneBy(["nombre" => "Bifurcada"]);
         $actividad->setTipoPlanificacion($tipoPlanificacion);
         $planificacion = new Planificacion();
         $manager->persist($planificacion);
