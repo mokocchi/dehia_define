@@ -6,7 +6,9 @@ use App\Api\ApiProblem;
 use App\Api\ApiProblemException;
 use App\Controller\BaseController;
 use App\Entity\Actividad;
+use App\Entity\ActividadTarea;
 use App\Pagination\PaginationFactory;
+use App\Repository\ActividadTareaRepository;
 use FOS\RestBundle\Controller\Annotations as Rest;
 use Symfony\Component\HttpFoundation\HeaderUtils;
 use Symfony\Component\HttpFoundation\Response;
@@ -140,7 +142,14 @@ class PublicActividadesController extends BaseController
     {
         $actividad = $this->checkActividadFound($id);
         $this->checkAccessActividad($actividad);
-        $tareas = $actividad->getTareas();
+        $em = $this->getDoctrine()->getManager();
+        /** @var ActividadTareaRepository $repository */
+        $repository = $em->getRepository(ActividadTarea::class);
+        $actividadTareas = $repository->findByActividad($actividad);
+        $tareas = [];
+        foreach ($actividadTareas as $actividadTarea) {
+            $tareas[]= $actividadTarea->getTarea();
+        }
         return $this->handleView($this->getViewWithGroups(["results" => $tareas], "publico"));
     }
 
@@ -163,8 +172,12 @@ class PublicActividadesController extends BaseController
         $JSON["educationalActivity"] = $educationalActivity;
         $planificacion = $actividad->getPlanificacion();
         $jumps = [];
-        foreach ($actividad->getTareas() as $tarea) {
-            $jumps[$tarea->getId()] = [];
+        $em = $this->getDoctrine()->getManager();
+        /** @var ActividadTareaRepository $repository */
+        $repository = $em->getRepository(ActividadTarea::class);
+        $actividadTareas = $repository->findByActividad($actividad);
+        foreach ($actividadTareas as $actividadTarea) {
+            $jumps[$actividadTarea->getTarea()->getId()] = [];
         }
         $saltos = $planificacion->getSaltos();
         foreach ($saltos as $salto) {
@@ -184,7 +197,8 @@ class PublicActividadesController extends BaseController
         })->toArray();
 
         $tasks = [];
-        foreach ($actividad->getTareas() as $tarea) {
+        foreach ($actividadTareas as $actividadTarea) {
+            $tarea = $actividadTarea->getTarea();
             $task = [
                 "code" => $tarea->getCodigo(),
                 "name" => $tarea->getNombre(),

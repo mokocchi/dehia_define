@@ -59,18 +59,6 @@ class ActividadRepository extends ServiceEntityRepository
         return $qb;
     }
 
-    public function hasTarea($actividadId, $tarea)
-    {
-        return $this->createQueryBuilder('a')
-            ->select("1")
-            ->where("a.id = :actividadId")
-            ->andWhere(":tarea MEMBER OF a.tareas")
-            ->setParameter("actividadId", $actividadId)
-            ->setParameter("tarea", $tarea)
-            ->getQuery()
-            ->getResult();
-    }
-
     /*
     public function findOneBySomeField($value): ?Actividad
     {

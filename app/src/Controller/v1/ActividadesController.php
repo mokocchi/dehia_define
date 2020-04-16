@@ -6,6 +6,7 @@ use App\Api\ApiProblem;
 use App\Api\ApiProblemException;
 use App\Controller\BaseController;
 use App\Entity\Actividad;
+use App\Entity\ActividadTarea;
 use App\Entity\Dominio;
 use App\Entity\Estado;
 use App\Entity\Idioma;
@@ -624,8 +625,15 @@ class ActividadesController extends BaseController
             $this->denyAccessUnlessGranted(TareaVoter::OWN, $tareaDb);
             $tareas[] = $tareaDb;
         }
+        $orden = 1;
         foreach ($tareas as $tarea) {
-            $actividad->addTarea($tarea);
+            $actividadTarea = new ActividadTarea();
+            $actividadTarea->setActividad($actividad);
+            $actividadTarea->setTarea($tarea);
+            $actividadTarea->setOrden($orden);
+            $orden++;
+            $em->persist($actividadTarea);
+            $actividad->addActividadTarea($actividadTarea);
         }
         $em->persist($actividad);
         $em->flush();
@@ -634,13 +642,15 @@ class ActividadesController extends BaseController
 
     private function removeTareasFromActividad($actividad)
     {
-        $tareas = $actividad->getTareas();
-        foreach ($tareas as $tarea) {
-            $actividad->removeTarea($tarea);
+        $em = $this->getDoctrine()->getManager();
+        $repository = $em->getRepository(ActividadTarea::class);
+        $actividadTareas = $repository->findBy(["actividad" => $actividad]);
+        
+        foreach ($actividadTareas as $actividadTarea) {
+            $actividad->removeActividadTarea($actividadTarea);
         }
         $planificacion = $actividad->getPlanificacion();
         $saltos = $planificacion->getSaltos();
-        $em = $this->getDoctrine()->getManager();
         foreach ($saltos as $salto) {
             $em->remove($salto);
         }
@@ -696,7 +706,14 @@ class ActividadesController extends BaseController
     {
         $actividad = $this->checkActividadFound($id);
         $this->denyAccessUnlessGranted(ActividadVoter::ACCESS, $actividad);
-        $tareas = $actividad->getTareas();
+        $em = $this->getDoctrine()->getManager();
+        /** @var ActividadTareaRepository $repository */
+        $repository = $em->getRepository(ActividadTarea::class);
+        $actividadTareas = $repository->findByActividad($actividad);
+        $tareas = [];
+        foreach ($actividadTareas as $actividadTarea) {
+            $tareas[]= $actividadTarea->getTarea();
+        }
         return $this->handleView($this->getViewWithGroups(["results" => $tareas], "autor"));
     }
 }

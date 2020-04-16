@@ -6,9 +6,10 @@ use App\Api\ApiProblem;
 use App\Api\ApiProblemException;
 use App\Controller\BaseController;
 use App\Entity\Actividad;
+use App\Entity\ActividadTarea;
 use App\Entity\Salto;
 use App\Entity\Tarea;
-use App\Repository\ActividadRepository;
+use App\Repository\ActividadTareaRepository;
 use App\Security\Voter\ActividadVoter;
 use App\Security\Voter\TareaVoter;
 use Symfony\Component\HttpFoundation\Request;
@@ -38,9 +39,9 @@ class PlanificacionesController extends BaseController
     public function checkTareaBelongsToActividad($actividad, $tarea)
     {
         $em = $this->getDoctrine()->getManager();
-        /** @var ActividadRepository $repository */
-        $repository = $em->getRepository(Actividad::class);
-        if (!$repository->hasTarea($actividad->getId(), $tarea)) {
+        /** @var ActividadTareaRepository $repository */
+        $repository = $em->getRepository(ActividadTarea::class);
+        if (!$repository->hasTarea($actividad, $tarea)) {
             throw new ApiProblemException(
                 new ApiProblem(
                     Response::HTTP_BAD_REQUEST,
@@ -213,7 +214,12 @@ class PlanificacionesController extends BaseController
                     null
             ];
         }
-        $this->checkGraphHasExit($actividad->getTareas(), $saltos);
+        $actividadTareas = $actividad->getActividadTareas();
+        $tareas = [];
+        foreach ($actividadTareas as $actividadTarea) {
+            $tareas[]= $actividadTarea->getTarea();
+        }
+        $this->checkGraphHasExit($tareas, $saltos);
         $iniciales = [];
         foreach ($data["iniciales"] as $inicialId) {
             $inicial = $this->checkTareaFound($inicialId);

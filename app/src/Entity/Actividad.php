@@ -69,11 +69,6 @@ class Actividad
     private $tipoPlanificacion;
 
     /**
-     * @ORM\ManyToMany(targetEntity="App\Entity\Tarea")
-     */
-    private $tareas;
-
-    /**
      * @ORM\OneToOne(targetEntity="App\Entity\Planificacion", cascade={"persist", "remove"})
      */
     private $planificacion;
@@ -101,9 +96,15 @@ class Actividad
      */
     private $codigo;
 
+    /**
+     * @ORM\OneToMany(targetEntity="App\Entity\ActividadTarea", mappedBy="actividad")
+     */
+    private $actividadTareas;
+
     public function __construct()
     {
         $this->tareas = new ArrayCollection();
+        $this->actividadTareas = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -177,32 +178,6 @@ class Actividad
         return $this;
     }
 
-    /**
-     * @return Collection|Tarea[]
-     */
-    public function getTareas(): Collection
-    {
-        return $this->tareas;
-    }
-
-    public function addTarea(Tarea $tarea): self
-    {
-        if (!$this->tareas->contains($tarea)) {
-            $this->tareas[] = $tarea;
-        }
-
-        return $this;
-    }
-
-    public function removeTarea(Tarea $tarea): self
-    {
-        if ($this->tareas->contains($tarea)) {
-            $this->tareas->removeElement($tarea);
-        }
-
-        return $this;
-    }
-
     public function getPlanificacion(): ?Planificacion
     {
         return $this->planificacion;
@@ -247,6 +222,37 @@ class Actividad
     public function setCodigo(string $codigo): self
     {
         $this->codigo = $codigo;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|ActividadTarea[]
+     */
+    public function getActividadTareas(): Collection
+    {
+        return $this->actividadTareas;
+    }
+
+    public function addActividadTarea(ActividadTarea $actividadTarea): self
+    {
+        if (!$this->actividadTareas->contains($actividadTarea)) {
+            $this->actividadTareas[] = $actividadTarea;
+            $actividadTarea->setActividad($this);
+        }
+
+        return $this;
+    }
+
+    public function removeActividadTarea(ActividadTarea $actividadTarea): self
+    {
+        if ($this->actividadTareas->contains($actividadTarea)) {
+            $this->actividadTareas->removeElement($actividadTarea);
+            // set the owning side to null (unless already changed)
+            if ($actividadTarea->getActividad() === $this) {
+                $actividadTarea->setActividad(null);
+            }
+        }
 
         return $this;
     }

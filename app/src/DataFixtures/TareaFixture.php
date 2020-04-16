@@ -3,6 +3,7 @@
 namespace App\DataFixtures;
 
 use App\Entity\Actividad;
+use App\Entity\ActividadTarea;
 use App\Entity\Autor;
 use App\Entity\Dominio;
 use App\Entity\Estado;
@@ -38,11 +39,20 @@ class TareaFixture extends BaseFixture
         $this->uploaderHelper->uploadPlano(new File($targetPath), $codigo, false);
     }
 
+    private function addActividadTarea($actividad, $tarea, $orden)
+    {
+        $actividadTarea = new ActividadTarea();
+        $actividadTarea->setActividad($actividad);
+        $actividadTarea->setTarea($tarea);
+        $actividadTarea->setOrden($orden);
+        $actividad->addActividadTarea($actividadTarea);
+    }
+
     protected function loadData(ObjectManager $manager)
     {
         $this->createMany(10, 'main_tareas', function ($count) use ($manager) {
             $tarea = new Tarea();
-            $tarea->setNombre("Tarea prueba". ($count + 1))
+            $tarea->setNombre("Tarea prueba" . ($count + 1))
                 ->setConsigna("Tarea libre!");
 
             $tipoDeposito = $manager->getRepository(TipoTarea::class)->findOneBy(["codigo" => "deposit"]);
@@ -74,39 +84,60 @@ class TareaFixture extends BaseFixture
 
         $tareas = $manager->getRepository(Tarea::class)->findBy(["consigna" => "Tarea libre!"]);
         $actividad = $manager->getRepository(Actividad::class)->find(1);
-        $actividad->addTarea($tareas[0]);
-        $actividad->addTarea($tareas[1]);
+        $orden = 1;
+        $this->addActividadTarea($actividad, $tareas[0], $orden);
+        $orden++;
+        $this->addActividadTarea($actividad, $tareas[1], $orden);
+        $orden++;
         $manager->persist($actividad);
         $manager->flush();
 
         $actividad = $manager->getRepository(Actividad::class)->find(2);
-        $actividad->addTarea($tareas[0]);
-        $actividad->addTarea($tareas[1]);
-        $actividad->addTarea($tareas[3]);
-        $actividad->addTarea($tareas[2]);
-        $actividad->addTarea($tareas[3]);
-        $actividad->addTarea($tareas[4]);
-        $actividad->addTarea($tareas[5]);
-        $actividad->addTarea($tareas[6]);
-        $actividad->addTarea($tareas[7]);
-        $actividad->addTarea($tareas[8]);
-        $actividad->addTarea($tareas[9]);
+        $this->addActividadTarea($actividad, $tareas[0], $orden);
+        $orden++;
+        $this->addActividadTarea($actividad, $tareas[1], $orden);
+        $orden++;
+        $this->addActividadTarea($actividad, $tareas[3], $orden);
+        $orden++;
+        $this->addActividadTarea($actividad, $tareas[2], $orden);
+        $orden++;
+        $this->addActividadTarea($actividad, $tareas[4], $orden);
+        $orden++;
+        $this->addActividadTarea($actividad, $tareas[5], $orden);
+        $orden++;
+        $this->addActividadTarea($actividad, $tareas[6], $orden);
+        $orden++;
+        $this->addActividadTarea($actividad, $tareas[7], $orden);
+        $orden++;
+        $this->addActividadTarea($actividad, $tareas[8], $orden);
+        $orden++;
+        $this->addActividadTarea($actividad, $tareas[9], $orden);
+        $orden++;
         $manager->persist($actividad);
         $manager->flush();
 
         $actividad = $manager->getRepository(Actividad::class)->find(4);
-        $actividad->addTarea($tareas[0]);
-        $actividad->addTarea($tareas[1]);
-        $actividad->addTarea($tareas[3]);
-        $actividad->addTarea($tareas[2]);
-        $actividad->addTarea($tareas[3]);
-        $actividad->addTarea($tareas[4]);
-        $actividad->addTarea($tareas[5]);
-        $actividad->addTarea($tareas[6]);
-        $actividad->addTarea($tareas[7]);
-        $actividad->addTarea($tareas[8]);
-        $actividad->addTarea($tareas[9]);
-        
+        $this->addActividadTarea($actividad, $tareas[0], $orden);
+        $orden++;
+        $this->addActividadTarea($actividad, $tareas[1], $orden);
+        $orden++;
+        $this->addActividadTarea($actividad, $tareas[3], $orden);
+        $orden++;
+        $this->addActividadTarea($actividad, $tareas[2], $orden);
+        $orden++;
+        $this->addActividadTarea($actividad, $tareas[4], $orden);
+        $orden++;
+        $this->addActividadTarea($actividad, $tareas[5], $orden);
+        $orden++;
+        $this->addActividadTarea($actividad, $tareas[6], $orden);
+        $orden++;
+        $this->addActividadTarea($actividad, $tareas[7], $orden);
+        $orden++;
+        $this->addActividadTarea($actividad, $tareas[8], $orden);
+        $orden++;
+        $this->addActividadTarea($actividad, $tareas[9], $orden);
+        $orden++;
+
         $manager->persist($actividad);
         $manager->flush();
     }
