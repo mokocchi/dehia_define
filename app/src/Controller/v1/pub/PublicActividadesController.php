@@ -148,7 +148,8 @@ class PublicActividadesController extends BaseController
         $actividadTareas = $repository->findByActividad($actividad);
         $tareas = [];
         foreach ($actividadTareas as $actividadTarea) {
-            $tareas[]= $actividadTarea->getTarea();
+            $tarea = $actividadTarea->getTarea();
+            $tareas[]= $tarea->setOrden($actividadTarea->getOrden());
         }
         return $this->handleView($this->getViewWithGroups(["results" => $tareas], "publico"));
     }

@@ -89,6 +89,12 @@ class Tarea
      */
     private $estado;
 
+    /**
+     * @Expose
+     * @Groups({"autor", "publico"})
+     */
+    private $orden;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -193,5 +199,18 @@ class Tarea
     public function getPlanoPath(): string
     {
         return UploaderHelper::PLANOS . '/' . $this->getCodigo();
+    }
+
+
+    public function getOrden(): ?int
+    {
+        return $this->orden;
+    }
+
+    public function setOrden(int $orden): self
+    {
+        $this->orden = $orden;
+
+        return $this;
     }
 }
