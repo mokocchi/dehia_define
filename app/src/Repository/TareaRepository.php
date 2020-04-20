@@ -2,6 +2,8 @@
 
 namespace App\Repository;
 
+use App\Api\ApiProblem;
+use App\Api\ApiProblemException;
 use App\Entity\Dominio;
 use App\Entity\Tarea;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
@@ -23,7 +25,7 @@ class TareaRepository extends ServiceEntityRepository
     /**
      * @return bool Devuelve si hay tareas con un dominio
      */
-    
+
     public function isThereWithDominio(Dominio $value)
     {
         return $this->createQueryBuilder('t')
@@ -31,13 +33,16 @@ class TareaRepository extends ServiceEntityRepository
             ->where('t.dominio = :val')
             ->setParameter('val', $value)
             ->getQuery()
-            ->getSingleScalarResult()
-        ;
+            ->getSingleScalarResult();
     }
 
-    public function findAllUserQueryBuilder($nombre = '', $user = '')
+    public function findAllUserQueryBuilder($nombre = '', $user = '', $opciones = '')
     {
         $qb = $this->createQueryBuilder('tarea');
+        if ($opciones === "true") {
+            $qb->join("tarea.tipo", "t")
+                ->where("t.id in (5, 6, 8)");
+        }
         if ($nombre) {
             $qb->andWhere('tarea.nombre LIKE :nombre')
                 ->setParameter('nombre', '%' . $nombre . '%');
@@ -58,12 +63,12 @@ class TareaRepository extends ServiceEntityRepository
                 ->join("tarea.estado", "e")
                 ->where("e.nombre = :estado")
                 ->andWhere('tarea.nombre LIKE :nombre')
-                ->setParameter("estado","Público")
+                ->setParameter("estado", "Público")
                 ->setParameter('nombre', '%' . $nombre . '%');
         }
         return $qb;
     }
-   
+
 
     /*
     public function findOneBySomeField($value): ?Tarea

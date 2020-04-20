@@ -196,9 +196,10 @@ class TareasController extends BaseController
     public function getActividadForUserAction(Request $request, PaginationFactory $paginationFactory)
     {
         $nombre = $request->query->get('nombre');
+        $opciones = $request->query->get('opciones');
         /** @var TareaRepository $repository */
         $repository = $this->getDoctrine()->getRepository(Tarea::class);
-        $qb = $repository->findAllUserQueryBuilder($nombre, $this->getUser());
+        $qb = $repository->findAllUserQueryBuilder($nombre, $this->getUser(), $opciones);
         $paginatedCollection = $paginationFactory->createCollection($qb, $request, 'get_tareas_user');
         return $this->handleView($this->getViewWithGroups($paginatedCollection, "autor"));
     }
