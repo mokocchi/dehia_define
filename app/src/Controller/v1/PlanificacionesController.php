@@ -79,6 +79,24 @@ class PlanificacionesController extends BaseController
         );
     }
 
+    private function checkCriticalsNotOptional($opcionales, $saltos)
+    {
+        array_map(function ($opt) use ($saltos) {
+            $references = array_filter($saltos, (function ($elem) use ($opt) {
+                return (($elem["origen"]->getId() == $opt) && !is_null($elem["respuesta"]));
+            }));
+            if (count($references) > 0) {
+                throw new ApiProblemException(
+                    new ApiProblem(
+                        Response::HTTP_BAD_REQUEST,
+                        "Hay tareas críticas marcadas como opcionales",
+                        "No se puede marcar una tarea condicional como opcional"
+                    )
+                );
+            }
+        }, $opcionales);
+    }
+
     /**
      * Setea la planificacion de una actividad
      * @Rest\Put("/{id}", name="put_planificacion_actividad")
@@ -217,7 +235,7 @@ class PlanificacionesController extends BaseController
         $actividadTareas = $actividad->getActividadTareas();
         $tareas = [];
         foreach ($actividadTareas as $actividadTarea) {
-            $tareas[]= $actividadTarea->getTarea();
+            $tareas[] = $actividadTarea->getTarea();
         }
         $this->checkGraphHasExit($tareas, $saltos);
         $iniciales = [];
@@ -234,6 +252,7 @@ class PlanificacionesController extends BaseController
             $this->checkTareaBelongsToActividad($actividad, $opcional);
             $opcionales[] = $opcional;
         }
+        $this->checkCriticalsNotOptional($data["opcionales"], $saltos);
 
         $planificacion = $actividad->getPlanificacion();
         $prevSaltos = $planificacion->getSaltos();
