@@ -53,6 +53,11 @@ class PublicActividadesController extends BaseController
         return $this->checkEntityFound(Actividad::class, $id);
     }
 
+    private function checkActividadFoundByCodigo($codigo)
+    {
+        return $this->checkEntityFound(Actividad::class, $codigo, "codigo");
+    }
+
     private function checkAccessActividad($actividad)
     {
         if ($actividad->getEstado()->getNombre() == "Privado") {
@@ -152,6 +157,24 @@ class PublicActividadesController extends BaseController
             $tareas[]= $tarea->setOrden($actividadTarea->getOrden());
         }
         return $this->handleView($this->getViewWithGroups(["results" => $tareas], "publico"));
+    }
+
+    /**
+     * Lista los códigos de las tareas dado un código de actividad
+     * @Rest\Get("/{codigo}/columns", name="get_columns_actividad")
+     * @SWG\Tag(name="Actividad")
+     * @return Response
+     */
+    public function getTareasIdsAction($codigo) {
+        $actividad = $this->checkActividadFoundByCodigo($codigo);
+        //for any actividad
+        /** @var ActividadTareaRepository $actividadTareaRepository */
+        $actividadTareaRepository = $this->getDoctrine()->getManager()->getRepository(ActividadTarea::class);
+        $codigos = $actividadTareaRepository->findTareasByCodigo($codigo);
+        $ids = array_map(function($obj) {
+            return $obj["codigo"];
+        }, $codigos);
+        return $this->handleView($this->view(["results" => $ids]));
     }
 
     /**

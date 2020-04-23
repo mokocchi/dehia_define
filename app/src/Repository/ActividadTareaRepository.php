@@ -29,8 +29,19 @@ class ActividadTareaRepository extends ServiceEntityRepository
             ->setParameter('actividad', $actividad)
             ->orderBy('a.orden', 'ASC')
             ->getQuery()
-            ->getResult()
-        ;
+            ->getResult();
+    }
+
+    public function findTareasByCodigo($codigo)
+    {
+        return $this->createQueryBuilder('a')
+            ->select('t.codigo')
+            ->innerJoin("a.actividad", "ac")
+            ->innerJoin("a.tarea", "t")
+            ->where("ac.codigo = :codigo")
+            ->setParameter("codigo", $codigo)
+            ->getQuery()
+            ->getResult();
     }
 
     public function hasTarea($actividad, $tarea)
