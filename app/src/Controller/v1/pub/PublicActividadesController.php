@@ -154,7 +154,7 @@ class PublicActividadesController extends BaseController
         $tareas = [];
         foreach ($actividadTareas as $actividadTarea) {
             $tarea = $actividadTarea->getTarea();
-            $tareas[]= $tarea->setOrden($actividadTarea->getOrden());
+            $tareas[] = $tarea->setOrden($actividadTarea->getOrden());
         }
         return $this->handleView($this->getViewWithGroups(["results" => $tareas], "publico"));
     }
@@ -165,13 +165,14 @@ class PublicActividadesController extends BaseController
      * @SWG\Tag(name="Actividad")
      * @return Response
      */
-    public function getTareasIdsAction($codigo) {
+    public function getTareasIdsAction($codigo)
+    {
         $actividad = $this->checkActividadFoundByCodigo($codigo);
         //for any actividad
         /** @var ActividadTareaRepository $actividadTareaRepository */
         $actividadTareaRepository = $this->getDoctrine()->getManager()->getRepository(ActividadTarea::class);
         $codigos = $actividadTareaRepository->findTareasByCodigo($codigo);
-        $ids = array_map(function($obj) {
+        $ids = array_map(function ($obj) {
             return $obj["codigo"];
         }, $codigos);
         return $this->handleView($this->view(["results" => $ids]));
@@ -190,6 +191,7 @@ class PublicActividadesController extends BaseController
         $JSON["language"] = $actividad->getIdioma()->getCode();
         $educationalActivity = [
             "name" => $actividad->getNombre(),
+            "code" => $actividad->getCodigo(),
             "goal" => $actividad->getObjetivo(),
             "sequential" => ($actividad->getTipoPlanificacion()->getNombre() != "Libre")
         ];

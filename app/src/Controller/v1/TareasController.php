@@ -362,7 +362,7 @@ class TareasController extends BaseController
             }
             $this->checkExtraValidity($data["extraData"], $tarea);
         }
-        $tarea->setExtra($data["extraData"]);
+        $tarea->setExtra($data["extraData"] ?: []);
         $tarea->setAutor($this->getUser());
         $em = $this->getDoctrine()->getManager();
         $em->persist($tarea);
