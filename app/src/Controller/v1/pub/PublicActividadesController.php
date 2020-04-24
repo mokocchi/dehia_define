@@ -215,9 +215,14 @@ class PublicActividadesController extends BaseController
             //multiple jumps for each tarea
             $jumps[$salto->getOrigen()->getId()][] = $jump;
         }
-        $iniciales = $planificacion->getIniciales()->map(function ($elem) {
-            return $elem->getId();
-        })->toArray();
+        $iniciales =[];
+        if ($actividad->getTipoPlanificacion()->getNombre() === "Secuencial") {
+            $iniciales = [ $actividadTareas[0]->getTarea()->getId() ];
+        } else {
+            $iniciales = $planificacion->getIniciales()->map(function ($elem) {
+                return $elem->getId();
+            })->toArray();
+        }
         $opcionales = $planificacion->getOpcionales()->map(function ($elem) {
             return $elem->getId();
         })->toArray();
