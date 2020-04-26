@@ -12,6 +12,7 @@ use App\Entity\Tarea;
 use App\Repository\ActividadTareaRepository;
 use App\Security\Voter\ActividadVoter;
 use App\Security\Voter\TareaVoter;
+use Exception;
 use Symfony\Component\HttpFoundation\Request;
 use FOS\RestBundle\Controller\Annotations as Rest;
 use Swagger\Annotations as SWG;
@@ -95,6 +96,24 @@ class PlanificacionesController extends BaseController
                 );
             }
         }, $opcionales);
+    }
+
+    private function sendActivityToCollect($codigo, $tareas)
+    {
+        $codigosTarea = array_map(function($tarea) { return  $tarea->getCodigo(); }, $tareas);
+        $client = new \GuzzleHttp\Client(
+            [
+                'base_uri' => $_ENV["COLLECT_BASE_URL"]
+            ]
+        );
+        try {
+            $response = $client->put(sprintf("/api/v1.0/activities/%s", $codigo),[
+                "json" => ["tasks" => $codigosTarea]
+            ]);
+            return json_decode((string) $response->getBody(), true)["results"];
+        } catch (Exception $e) {
+            $this->logger->error($e->getMessage());
+        }
     }
 
     /**
@@ -293,6 +312,9 @@ class PlanificacionesController extends BaseController
         $em->persist($planificacion);
 
         $em->flush();
+
+        $this->sendActivityToCollect($actividad->getCodigo(), $tareas);
+
         return $this->handleView($this->getViewWithGroups($planificacion, "autor"));
     }
 
