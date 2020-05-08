@@ -62,7 +62,7 @@ class AuthServiceAuthenticator extends AbstractGuardAuthenticator
         }
 
         try {
-            $response = $this->client->get("/api/validate", ["headers" => ["Authorization" => $credentials]]);
+            $response = $this->client->get("/api/v1.0/users/me", ["headers" => ["Authorization" => $credentials]]);
             $data = json_decode((string) $response->getBody(), true);
         } catch (Exception $e) {
             if ($e instanceof RequestException) {
