@@ -46,12 +46,12 @@ class AuthServiceAuthenticator extends AbstractGuardAuthenticator
 
     public function getCredentials(Request $request)
     {
-        return $request->headers->get('Authorization');
+        return [$request->headers->get('Authorization'), $request->headers->get('X-Authorization-OAuth')];
     }
 
     public function getUser($credentials, UserProviderInterface $userProvider)
     {
-        if (null === $credentials) {
+        if (null === $credentials[0]) {
             throw new ApiProblemException(
                 new ApiProblem(
                     "400",
@@ -62,7 +62,13 @@ class AuthServiceAuthenticator extends AbstractGuardAuthenticator
         }
 
         try {
-            $response = $this->client->get("/api/v1.0/users/me", ["headers" => ["Authorization" => $credentials]]);
+            if($credentials[1]) {
+                //OAuth flow
+                $response = $this->client->get("/api/validate", ["headers" => ["Authorization" => $credentials[0]]]);
+            } else {
+                //JWT only flow
+                $response = $this->client->get("/api/v1.0/users/me", ["headers" => ["Authorization" => $credentials[0]]]);
+            }
             $data = json_decode((string) $response->getBody(), true);
         } catch (Exception $e) {
             if ($e instanceof RequestException) {
