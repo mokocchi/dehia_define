@@ -64,9 +64,11 @@ class AuthServiceAuthenticator extends AbstractGuardAuthenticator
         try {
             if($credentials[1]) {
                 //OAuth flow
+                $oauth = true;
                 $response = $this->client->get("/api/validate", ["headers" => ["Authorization" => $credentials[0]]]);
             } else {
                 //JWT only flow
+                $oauth = false;
                 $response = $this->client->get("/api/v1.0/users/me", ["headers" => ["Authorization" => $credentials[0]]]);
             }
             $data = json_decode((string) $response->getBody(), true);
@@ -128,6 +130,8 @@ class AuthServiceAuthenticator extends AbstractGuardAuthenticator
         foreach ($data["roles"] as $role) {
             $autor->addRole($role);
         }
+        $autor->setOauth($oauth);
+        $autor->setToken($credentials[0]);
 
         return $autor;
     }

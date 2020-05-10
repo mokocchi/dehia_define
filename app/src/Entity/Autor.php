@@ -67,6 +67,10 @@ class Autor implements UserInterface
      */
     private $tareas;
 
+    private $oauth;
+
+    private $token;
+
     public function __construct()
     {
         $this->roles = new ArrayCollection();
@@ -221,6 +225,28 @@ class Autor implements UserInterface
             }
         }
 
+        return $this;
+    }
+
+    public function getOauth(): bool
+    {
+        return $this->oauth;
+    }
+
+    public function setOauth(bool $oauth): self
+    {
+        $this->oauth = $oauth;
+        return $this;
+    }
+
+    public function getToken(): string
+    {
+        return $this->token;
+    }
+
+    public function setToken(string $token): self
+    {
+        $this->token = $token;
         return $this;
     }
 }

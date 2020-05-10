@@ -19,7 +19,9 @@ use App\Repository\ActividadRepository;
 use App\Security\Voter\ActividadVoter;
 use App\Security\Voter\TareaVoter;
 use Doctrine\ORM\EntityManager;
+use Exception;
 use FOS\RestBundle\Controller\Annotations as Rest;
+use GuzzleHttp\Exception\RequestException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -561,7 +563,52 @@ class ActividadesController extends BaseController
         $em->persist($actividad);
         $em->flush();
 
+        //send notification to collect&results
+        $this->notifyCollect($actividad);
+        $this->notifyResults($actividad);
+
         return $this->handleView($this->view(["actividad" => $actividad->getId()]));
+    }
+
+    public function notifyCollect($actividad)
+    {
+    }
+
+    public function notifyResults(Actividad $actividad)
+    {
+        $tareas = [];
+        foreach ($actividad->getActividadTareas() as $actividadTarea) {
+            $tarea = $actividadTarea->getTarea();
+            $tareas[] = [
+                "codigo" => $tarea->getCodigo(),
+                "nombre" => $tarea->getNombre(),
+                "extra" => $tarea->getExtra(),
+                "tipo" => $tarea->getTipo()->getCodigo()
+            ];
+        }
+        $options = [
+            "headers" => ["Authorization" => $this->getUser()->getToken()],
+            "json" => [
+                "codigo" => $actividad->getCodigo(),
+                "nombre" => $actividad->getNombre(),
+                "tareas" => $tareas
+            ]
+        ];
+        try {
+            $this->resultsClient->post("/api/v1.0/actividades", $options);
+        } catch (Exception $e) {
+            if ($e instanceof RequestException) {
+                $response = $e->getResponse();
+                if (!is_null($response)) {
+                    $data = json_decode((string) $response->getBody(), true);
+                    $this->logger->error($data["developer_message"]);
+                } else {
+                    $this->logger->error($e->getMessage());
+                }
+            } else {
+                $this->logger->error($e->getMessage());
+            }
+        }
     }
 
     /**
@@ -631,6 +678,8 @@ class ActividadesController extends BaseController
         $actividad->setCerrada(true);
         $em->persist($actividad);
         $em->flush();
+
+        //send notification to collect & results
 
         return $this->handleView($this->view(["actividad" => $actividad->getId()]));
     }

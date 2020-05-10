@@ -16,11 +16,23 @@ abstract class BaseController extends AbstractFOSRestController
 {
     protected $logger;
     protected $serializer;
+    protected $collectClient;
+    protected $resultsClient;
 
-    public function __construct(LoggerInterface $logger, SerializerInterface $serializer)
+    public function __construct(LoggerInterface $logger, SerializerInterface $serializer, $collectClient = null, $resultsClient = null)
     {
         $this->logger = $logger;
         $this->serializer = $serializer;
+        $this->collectClient = $collectClient ?: new \GuzzleHttp\Client(
+            [
+                'base_uri' => $_ENV["COLLECT_BASE_URL"]
+            ]
+        );
+        $this->resultsClient = $resultsClient ?: new \GuzzleHttp\Client(
+            [
+                'base_uri' => $_ENV["RESULTS_BASE_URL"]
+            ]
+        );
     }
 
     protected function getViewWithGroups($object, $group)
