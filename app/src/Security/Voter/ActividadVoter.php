@@ -45,7 +45,7 @@ class ActividadVoter extends Voter
                 if ($subject->getAutor() == $user){
                     return true;
                 }
-                if($subject->getEstado()->getNombre() == "Público") {
+                if(($subject->getEstado()->getNombre() == "Público") && $subject->getDefinitiva() ) {
                     return true;
                 }
                 throw new ApiProblemException(

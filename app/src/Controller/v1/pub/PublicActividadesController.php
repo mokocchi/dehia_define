@@ -60,7 +60,7 @@ class PublicActividadesController extends BaseController
 
     private function checkAccessActividad($actividad)
     {
-        if ($actividad->getEstado()->getNombre() == "Privado") {
+        if (($actividad->getEstado()->getNombre() == "Privado") || !$actividad->getDefinitiva()) {
             throw new ApiProblemException(
                 new ApiProblem(Response::HTTP_FORBIDDEN, "La actividad es privada", "No se puede acceder a la actividad")
             );

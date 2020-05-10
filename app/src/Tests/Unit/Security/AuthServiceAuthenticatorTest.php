@@ -66,7 +66,7 @@ class AuthServiceAuthenticatorTest extends TestCase
 
         $authenticator = new AuthServiceAuthenticator($entityManagerMock, $responseFactoryMock, $this->loggerMock);
         $request = new Request([], [], [], [], [], ["HTTP_AUTHORIZATION" => "Bearer 1"]);
-        $this->assertEquals("Bearer 1", $authenticator->getCredentials($request));
+        $this->assertEquals("Bearer 1", $authenticator->getCredentials($request)[0]);
     }
 
     public function testGetUser()
@@ -150,13 +150,13 @@ class AuthServiceAuthenticatorTest extends TestCase
         $authenticator = new AuthServiceAuthenticator($entityManagerMock, $responseFactoryMock, $this->loggerMock, $clientMock);
 
         /** @var Autor $authenticatedAutor */
-        $authenticatedAutor = $authenticator->getUser("Bearer 1", $userProviderInterfaceMock);
+        $authenticatedAutor = $authenticator->getUser(["Bearer 1", true], $userProviderInterfaceMock);
         $this->assertEquals("Autor", $authenticatedAutor->getNombre());
         $this->assertEquals("1234", $authenticatedAutor->getGoogleid());
 
         //onConsecutiveCalls #2 = usuarioApp
         try {
-            $authenticatedAutor = $authenticator->getUser("Bearer 1", $userProviderInterfaceMock);
+            $authenticatedAutor = $authenticator->getUser(["Bearer 1", true], $userProviderInterfaceMock);
         } catch (ApiProblemException $e) {
             $apiProblem = $e->getApiProblem();
             $this->assertEquals("El token no pertenece a un autor", $apiProblem->getDeveloperMessage());
@@ -164,7 +164,7 @@ class AuthServiceAuthenticatorTest extends TestCase
         }
 
         try {
-            $authenticatedAutor = $authenticator->getUser("Bearer 0", $userProviderInterfaceMock);
+            $authenticatedAutor = $authenticator->getUser(["Bearer 0", true], $userProviderInterfaceMock);
         } catch (ApiProblemException $e) {
             $apiProblem = $e->getApiProblem();
             $this->assertEquals("El token expiró o es inválido", $apiProblem->getDeveloperMessage());

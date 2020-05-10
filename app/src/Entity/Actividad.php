@@ -101,10 +101,26 @@ class Actividad
      */
     private $actividadTareas;
 
+    /**
+     * @ORM\Column(type="boolean")
+     * @Expose
+     * @Groups({"autor"})
+     */
+    private $definitiva;
+
+    /**
+     * @ORM\Column(type="boolean")
+     * @Expose
+     * @Groups({"autor"})
+     */
+    private $cerrada;
+
     public function __construct()
     {
         $this->tareas = new ArrayCollection();
         $this->actividadTareas = new ArrayCollection();
+        $this->definitiva = false;
+        $this->cerrada = false;
     }
 
     public function getId(): ?int
@@ -253,6 +269,30 @@ class Actividad
                 $actividadTarea->setActividad(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getDefinitiva(): ?bool
+    {
+        return $this->definitiva;
+    }
+
+    public function setDefinitiva(bool $definitiva): self
+    {
+        $this->definitiva = $definitiva;
+
+        return $this;
+    }
+
+    public function getCerrada(): ?bool
+    {
+        return $this->cerrada;
+    }
+
+    public function setCerrada(bool $cerrada): self
+    {
+        $this->cerrada = $cerrada;
 
         return $this;
     }

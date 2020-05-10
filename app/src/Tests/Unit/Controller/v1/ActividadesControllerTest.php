@@ -515,6 +515,8 @@ class ActividadesControllerTest extends TestCase
                 "autor",
                 "estado",
                 "codigo",
+                "definitiva",
+                "cerrada",
                 "_links"
             ],
             array_keys($data)
@@ -525,6 +527,8 @@ class ActividadesControllerTest extends TestCase
         $this->assertEquals("1234", $data["codigo"]);
         $this->assertEquals("Test", $data["dominio"]["nombre"]);
         $this->assertEquals("fr", $data["idioma"]["code"]);
+        $this->assertFalse($data["definitiva"]);
+        $this->assertFalse($data["cerrada"]);
         $this->assertEquals("Circular", $data["tipo_planificacion"]["nombre"]);
         $this->assertEquals("Privado", $data["estado"]["nombre"]);
         $this->assertEquals("Autor", $data["autor"]["nombre"]);

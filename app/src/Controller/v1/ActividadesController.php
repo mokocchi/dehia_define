@@ -319,7 +319,7 @@ class ActividadesController extends BaseController
         $this->checkCodigoNotUsed($data["codigo"], $em);
         $form->submit($data);
         $this->checkFormValidity($form);
-        
+
         if (is_null($em)) {
             $em = $this->getDoctrine()->getManager();
         }
@@ -435,6 +435,15 @@ class ActividadesController extends BaseController
         /** @var Actividad $actividad */
         $actividad = $this->checkActividadFound($id, $em);
         $this->denyAccessUnlessGranted(ActividadVoter::OWN, $actividad);
+        if ($actividad->getDefinitiva()) {
+            throw new ApiProblemException(
+                new ApiProblem(
+                    Response::HTTP_BAD_REQUEST,
+                    "No se puede modificar una actividad publicada",
+                    "No se puede modificar la actividad"
+                )
+            );
+        }
 
         if (array_key_exists("codigo", $data)) {
             throw new ApiProblemException(
@@ -482,6 +491,148 @@ class ActividadesController extends BaseController
         $em->persist($actividad);
         $em->flush();
         return $this->getViewHandler()->handle($this->getViewWithGroups($actividad, "autor"), $request);
+    }
+
+    /**
+     * Publica una actividad
+     * @Rest\Post("/publicadas",name="publish_actividad")
+     * @IsGranted("ROLE_AUTOR")
+     *
+     * @SWG\Response(
+     *     response=401,
+     *     description="No autorizado"
+     * )
+     * 
+     * @SWG\Response(
+     *     response=403,
+     *     description="Permisos insuficientes"
+     * )
+     * 
+     * @SWG\Response(
+     *     response=404,
+     *     description="Actividad no encontrada"
+     * )
+     * 
+     * @SWG\Response(
+     *     response=200,
+     *     description="La actividad fue publicada"
+     * )
+     *
+     * @SWG\Response(
+     *     response=400,
+     *     description="Hubo un problema con la petición"
+     * )
+     * 
+     * @SWG\Response(
+     *     response=500,
+     *     description="Error en el servidor"
+     * )
+     *
+     * @SWG\Parameter(
+     *     required=true,
+     *     name="Authorization",
+     *     in="header",
+     *     type="string",
+     *     description="Bearer token",
+     * )
+     *
+     * @SWG\Tag(name="Actividad")
+     * 
+     * @return Response
+     */
+    public function publishActividad(Request $request)
+    {
+        $data = $this->getJsonData($request);
+        $this->checkRequiredParameters(["actividad"], $data);
+        $actividad = $this->checkActividadFound($data["actividad"]);
+        $this->denyAccessUnlessGranted(ActividadVoter::OWN, $actividad);
+
+        $em = $this->getDoctrine()->getManager();
+        if ($actividad->getDefinitiva()) {
+            throw new ApiProblemException(
+                new ApiProblem(
+                    Response::HTTP_BAD_REQUEST,
+                    "La actividad ya fue publicada",
+                    "La actividad ya fue publicada"
+                )
+            );
+        }
+        $actividad->setDefinitiva(true);
+        $em->persist($actividad);
+        $em->flush();
+
+        return $this->handleView($this->view(["actividad" => $actividad->getId()]));
+    }
+
+    /**
+     * Da de baja una actividad
+     * @Rest\Post("/cerradas",name="close_actividad")
+     * @IsGranted("ROLE_AUTOR")
+     *
+     * @SWG\Response(
+     *     response=401,
+     *     description="No autorizado"
+     * )
+     * 
+     * @SWG\Response(
+     *     response=403,
+     *     description="Permisos insuficientes"
+     * )
+     * 
+     * @SWG\Response(
+     *     response=404,
+     *     description="Actividad no encontrada"
+     * )
+     * 
+     * @SWG\Response(
+     *     response=200,
+     *     description="La actividad fue cerrada"
+     * )
+     *
+     * @SWG\Response(
+     *     response=400,
+     *     description="Hubo un problema con la petición"
+     * )
+     * 
+     * @SWG\Response(
+     *     response=500,
+     *     description="Error en el servidor"
+     * )
+     *
+     * @SWG\Parameter(
+     *     required=true,
+     *     name="Authorization",
+     *     in="header",
+     *     type="string",
+     *     description="Bearer token",
+     * )
+     *
+     * @SWG\Tag(name="Actividad")
+     * 
+     * @return Response
+     */
+    public function closeActividad(Request $request)
+    {
+        $data = $this->getJsonData($request);
+        $this->checkRequiredParameters(["actividad"], $data);
+        $actividad = $this->checkActividadFound($data["actividad"]);
+        $this->denyAccessUnlessGranted(ActividadVoter::OWN, $actividad);
+
+        if ($actividad->getCerrada()) {
+            throw new ApiProblemException(
+                new ApiProblem(
+                    Response::HTTP_BAD_REQUEST,
+                    "La actividad ya está cerrada",
+                    "La actividad ya está cerrada"
+                )
+            );
+        }
+        $em = $this->getDoctrine()->getManager();
+        $actividad->setCerrada(true);
+        $em->persist($actividad);
+        $em->flush();
+
+        return $this->handleView($this->view(["actividad" => $actividad->getId()]));
     }
 
     /**
@@ -614,6 +765,15 @@ class ActividadesController extends BaseController
 
         $actividad = $this->checkActividadFound($id);
         $this->denyAccessUnlessGranted(ActividadVoter::OWN, $actividad);
+        if ($actividad->getDefinitiva()) {
+            throw new ApiProblemException(
+                new ApiProblem(
+                    Response::HTTP_BAD_REQUEST,
+                    "No se puede modificar una actividad publicada",
+                    "No se puede modificar la actividad"
+                )
+            );
+        }
 
         $this->removeTareasFromActividad($actividad);
 
@@ -645,7 +805,7 @@ class ActividadesController extends BaseController
         $em = $this->getDoctrine()->getManager();
         $repository = $em->getRepository(ActividadTarea::class);
         $actividadTareas = $repository->findBy(["actividad" => $actividad]);
-        
+
         foreach ($actividadTareas as $actividadTarea) {
             $actividad->removeActividadTarea($actividadTarea);
         }
@@ -713,7 +873,7 @@ class ActividadesController extends BaseController
         $tareas = [];
         foreach ($actividadTareas as $actividadTarea) {
             $tarea = $actividadTarea->getTarea();
-            $tareas[]= $tarea->setOrden($actividadTarea->getOrden());
+            $tareas[] = $tarea->setOrden($actividadTarea->getOrden());
         }
         return $this->handleView($this->getViewWithGroups(["results" => $tareas], "autor"));
     }

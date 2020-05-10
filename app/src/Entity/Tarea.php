@@ -60,7 +60,7 @@ class Tarea
     private $tipo;
 
     /**
-     * @ORM\Column(type="json", nullable=false, options={"default":"[]"})
+     * @ORM\Column(type="json", nullable=false)
      * @Expose
      * @Groups({"autor", "publico"})
      */

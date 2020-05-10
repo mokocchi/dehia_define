@@ -46,9 +46,10 @@ class ActividadVoterTest extends TestCase
         $this->assertEquals(Voter::ACCESS_GRANTED, $result);
     }
 
-    public function testGrantAccessPublicOther()
+    public function testGrantAccessPublicOtherDefinitive()
     {
         $actividad = new Actividad();
+        $actividad->setDefinitiva(true);
         $estado = new Estado();
         $estado->setNombre("Público");
         $actividad->setEstado($estado);
@@ -62,6 +63,30 @@ class ActividadVoterTest extends TestCase
         $voter = new ActividadVoter($security);
         $result = $voter->vote($token, $actividad, [ActividadVoter::ACCESS]);
         $this->assertEquals(Voter::ACCESS_GRANTED, $result);
+    }
+
+    public function testDenyAccessPublicOtherDraft()
+    {
+        $actividad = new Actividad();
+        $estado = new Estado();
+        $estado->setNombre("Público");
+        $actividad->setEstado($estado);
+
+        $autor = new Autor();
+
+        $token = new UsernamePasswordToken($autor, null, "test", ["ROLE_AUTOR"]);
+        self::$container->get('security.token_storage')->setToken($token);
+
+        $security = new Security(self::$container);
+        $voter = new ActividadVoter($security);
+        try {
+            $voter->vote($token, $actividad, [ActividadVoter::ACCESS]);
+            $this->fail("No se detectó que la actividad no es definitiva");
+        } catch (ApiProblemException $e) {
+            $apiProblem = $e->getApiProblem();
+            $this->assertEquals("La actividad es privada o no pertenece al usuario actual", $apiProblem->getDeveloperMessage());
+            $this->assertEquals("No se puede acceder a la actividad", $apiProblem->getUserMessage());
+        }
     }
 
     public function testGrantOwnPublicOwned()

@@ -55,6 +55,8 @@ class ActividadesControllerTest extends TestCase
             "autor",
             "estado",
             "codigo",
+            "definitiva",
+            "cerrada",
             "_links"
         ], array_keys($data));
         $this->assertNotEmpty($data["id"]);
@@ -65,7 +67,9 @@ class ActividadesControllerTest extends TestCase
         $this->assertEquals("es", $data["idioma"]["code"]);
         $this->assertEquals("Secuencial", $data["tipo_planificacion"]["nombre"]);
         $this->assertEquals("Privado", $data["estado"]["nombre"]);
-        $this->assertEquals("Autor", $data["autor"]["nombre"]);
+        $this->assertEquals("Ana", $data["autor"]["nombre"]);
+        $this->assertFalse($data["definitiva"]);
+        $this->assertFalse($data["cerrada"]);
         $this->assertEquals($this->generateUrl("show_actividad", ["id" => $data["id"]]), $data['_links']['self']);
 
         $actividad = $repository->findOneBy(["codigo" => "1234"]);

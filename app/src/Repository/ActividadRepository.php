@@ -53,9 +53,10 @@ class ActividadRepository extends ServiceEntityRepository
                 ->join("actividad.estado", "e")
                 ->where("e.nombre = :estado")
                 ->andWhere('actividad.nombre LIKE :filter')
-                ->setParameter("estado","Público")
+                ->setParameter("estado", "Público")
                 ->setParameter('filter', '%' . $filter . '%');
         }
+        $qb->andWhere("actividad.definitiva = true");
         return $qb;
     }
 

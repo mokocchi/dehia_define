@@ -228,6 +228,16 @@ class PlanificacionesController extends BaseController
         $actividad = $this->checkActividadFound($id);
         $this->denyAccessUnlessGranted(ActividadVoter::OWN, $actividad);
 
+        if ($actividad->getDefinitiva()) {
+            throw new ApiProblemException(
+                new ApiProblem(
+                    Response::HTTP_BAD_REQUEST,
+                    "No se puede modificar una actividad publicada",
+                    "No se puede modificar la actividad"
+                )
+            );
+        }
+
         $saltos = [];
         $this->checkIsArray($data["saltos"], "saltos");
         foreach ($data["saltos"] as $saltoArray) {
