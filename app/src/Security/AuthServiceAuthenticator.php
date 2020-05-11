@@ -159,7 +159,7 @@ class AuthServiceAuthenticator extends AbstractGuardAuthenticator
     {
         return $this->apiProblemResponseFactory->createResponse(new ApiProblem(
             "401",
-            "Se requiere autenticación OAuth",
+            "Se requiere autenticación",
             "No autorizado"
         ));
     }

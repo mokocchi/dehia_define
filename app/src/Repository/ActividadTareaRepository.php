@@ -35,9 +35,10 @@ class ActividadTareaRepository extends ServiceEntityRepository
     public function findTareasByCodigo($codigo)
     {
         return $this->createQueryBuilder('a')
-            ->select('t.codigo')
+            ->select('t.codigo as code, tipo.codigo as type')
             ->innerJoin("a.actividad", "ac")
             ->innerJoin("a.tarea", "t")
+            ->innerJoin("t.tipo", "tipo")
             ->where("ac.codigo = :codigo")
             ->setParameter("codigo", $codigo)
             ->getQuery()

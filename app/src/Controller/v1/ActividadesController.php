@@ -564,14 +564,48 @@ class ActividadesController extends BaseController
         $em->flush();
 
         //send notification to collect&results
-        $this->notifyCollect($actividad);
+        $this->notifyNewToCollect($actividad);
         $this->notifyResults($actividad);
 
         return $this->handleView($this->view(["actividad" => $actividad->getId()]));
     }
 
-    public function notifyCollect($actividad)
+    public function notifyNewToCollect($actividad)
     {
+        $tareas = [];
+        foreach ($actividad->getActividadTareas() as $actividadTarea) {
+            $tarea = $actividadTarea->getTarea();
+            $tareas[] = [
+                "code" => $tarea->getCodigo(),
+                "type" => $tarea->getTipo()->getCodigo()
+            ];
+        }
+        $options = [
+            "headers" => [
+                "Authorization" => $this->getUser()->getToken(),
+                "X-Authorization-OAuth" => $this->getUser()->getOAuth()
+            ],
+            "json" => [
+                "author" => $actividad->getAutor()->getGoogleid(),
+                "code" => $actividad->getCodigo(),
+                "tasks" => $tareas
+            ]
+        ];
+        try {
+            $this->collectClient->post("/api/v1.0/activities", $options);
+        } catch (Exception $e) {
+            if ($e instanceof RequestException) {
+                $response = $e->getResponse();
+                if (!is_null($response)) {
+                    $data = json_decode((string) $response->getBody(), true);
+                    $this->logger->error($data["developer_message"]);
+                } else {
+                    $this->logger->error($e->getMessage());
+                }
+            } else {
+                $this->logger->error($e->getMessage());
+            }
+        }
     }
 
     public function notifyResults(Actividad $actividad)
@@ -587,7 +621,10 @@ class ActividadesController extends BaseController
             ];
         }
         $options = [
-            "headers" => ["Authorization" => $this->getUser()->getToken()],
+            "headers" => [
+                "Authorization" => $this->getUser()->getToken(),
+                "X-Authorization-OAuth" => $this->getUser()->getOAuth()
+            ],
             "json" => [
                 "codigo" => $actividad->getCodigo(),
                 "nombre" => $actividad->getNombre(),
@@ -674,6 +711,9 @@ class ActividadesController extends BaseController
                 )
             );
         }
+
+        $this->notifyCloseToCollect($actividad);
+
         $em = $this->getDoctrine()->getManager();
         $actividad->setCerrada(true);
         $em->persist($actividad);
@@ -682,6 +722,53 @@ class ActividadesController extends BaseController
         //send notification to collect & results
 
         return $this->handleView($this->view(["actividad" => $actividad->getId()]));
+    }
+
+    public function notifyCloseToCollect(Actividad $actividad)
+    {
+        $options = [
+            "headers" => [
+                "Authorization" => $this->getUser()->getToken(),
+                "X-Authorization-OAuth" => $this->getUser()->getOAuth()
+            ],
+            "json" => [
+                "activity" => $actividad->getCodigo(),
+            ]
+        ];
+        try {
+            $this->collectClient->post("/api/v1.0/activities/closed", $options);
+        } catch (Exception $e) {
+            if ($e instanceof RequestException) {
+                $response = $e->getResponse();
+                if (!is_null($response)) {
+                    $data = json_decode((string) $response->getBody(), true);
+                    $this->logger->error($data["developer_message"]);
+                    throw new ApiProblemException(
+                        new ApiProblem(
+                            Response::HTTP_SERVICE_UNAVAILABLE,
+                            $data["developer_message"],
+                            "No se pudo cerrar la actividad"
+                        )
+                    );
+                } else {
+                    $this->logger->error($e->getMessage());
+                    throw new ApiProblem(
+                        Response::HTTP_SERVICE_UNAVAILABLE,
+                        "No se pudo cerrar la actividad",
+                        "No se pudo cerrar la actividad"
+                    );
+                }
+            } else {
+                $this->logger->error($e->getMessage());
+                throw new ApiProblemException(
+                    new ApiProblem(
+                        Response::HTTP_SERVICE_UNAVAILABLE,
+                        "El servicio de respuestas no está disponible",
+                        "No se pudo cerrar la actividad"
+                    )
+                );
+            }
+        }
     }
 
     /**

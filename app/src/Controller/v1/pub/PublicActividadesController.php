@@ -168,14 +168,20 @@ class PublicActividadesController extends BaseController
     public function getTareasIdsAction($codigo)
     {
         $actividad = $this->checkActividadFoundByCodigo($codigo);
+        if ($actividad->getCerrada() || !$actividad->getDefinitiva()) {
+            throw new ApiProblemException(
+                new ApiProblem(
+                    Response::HTTP_FORBIDDEN,
+                    "La actividad está cerrada",
+                    "La actividad está cerrada"
+                )
+            );
+        }
         //for any actividad
         /** @var ActividadTareaRepository $actividadTareaRepository */
         $actividadTareaRepository = $this->getDoctrine()->getManager()->getRepository(ActividadTarea::class);
-        $codigos = $actividadTareaRepository->findTareasByCodigo($codigo);
-        $ids = array_map(function ($obj) {
-            return $obj["codigo"];
-        }, $codigos);
-        return $this->handleView($this->view(["results" => $ids]));
+        $tasks = $actividadTareaRepository->findTareasByCodigo($codigo);
+        return $this->handleView($this->view(["author" => $actividad->getAutor()->getGoogleid(), "results" => $tasks]));
     }
 
     /**
@@ -215,9 +221,9 @@ class PublicActividadesController extends BaseController
             //multiple jumps for each tarea
             $jumps[$salto->getOrigen()->getId()][] = $jump;
         }
-        $iniciales =[];
+        $iniciales = [];
         if ($actividad->getTipoPlanificacion()->getNombre() === "Secuencial") {
-            $iniciales = [ $actividadTareas[0]->getTarea()->getId() ];
+            $iniciales = [$actividadTareas[0]->getTarea()->getId()];
         } else {
             $iniciales = $planificacion->getIniciales()->map(function ($elem) {
                 return $elem->getId();
