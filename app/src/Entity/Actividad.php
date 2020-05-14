@@ -7,6 +7,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation\ExclusionPolicy;
+use JMS\Serializer\Annotation\VirtualProperty;
 use JMS\Serializer\Annotation\Groups;
 use JMS\Serializer\Annotation\Expose;
 
@@ -33,7 +34,7 @@ class Actividad
     /**
      * @ORM\Column(type="string", length=255)
      * @Expose
-     * @Groups({"autor", "publico"})
+     * @Groups({"autor", "publico", "results"})
      */
     private $nombre;
 
@@ -77,7 +78,7 @@ class Actividad
      * @ORM\ManyToOne(targetEntity="App\Entity\Autor", inversedBy="actividadesCreadas")
      * @ORM\JoinColumn(nullable=true)
      * @Expose
-     * @Groups({"autor", "publico"})
+     * @Groups({"autor", "publico", "results"})
      */
     private $autor;
 
@@ -92,7 +93,7 @@ class Actividad
     /**
      * @ORM\Column(type="string", length=255)
      * @Expose
-     * @Groups({"autor", "publico"})
+     * @Groups({"autor", "publico", "results"})
      */
     private $codigo;
 
@@ -271,6 +272,16 @@ class Actividad
         }
 
         return $this;
+    }
+
+    /**
+     * @VirtualProperty(name="tareas") 
+     * @Expose
+     * @Groups({"results"})
+     */
+    public function getTareas(): Collection
+    {
+        return $this->actividadTareas->map(function($at){return $at->getTarea();});
     }
 
     public function getDefinitiva(): ?bool

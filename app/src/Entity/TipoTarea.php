@@ -32,7 +32,7 @@ class TipoTarea
     /**
      * @ORM\Column(type="string", length=255)
      * @Expose
-     * @Groups({"autor", "publico"})
+     * @Groups({"autor", "publico", "results"})
      */
     private $codigo;
 

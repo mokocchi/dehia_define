@@ -140,6 +140,11 @@ class ActividadesController extends BaseController
         return $this->checkEntityFound(Actividad::class, $id, null, $em);
     }
 
+    private function checkActividadFoundByCodigo($codigo, $em = null)
+    {
+        return $this->checkEntityFound(Actividad::class, $codigo, "codigo", $em);
+    }
+
     private function checkTareaFound($id)
     {
         return $this->checkEntityFound(Tarea::class, $id);
@@ -202,9 +207,19 @@ class ActividadesController extends BaseController
      */
     public function showActividadAction($id, Request $request = null, EntityManager $em = null)
     {
-        $actividad = $this->checkActividadFound($id, $em);
+        $tareas = $request->query->get("tareas");
+        if ($tareas) {
+            $actividad = $this->checkActividadFoundByCodigo($id, $em);
+        } else {
+            $actividad = $this->checkActividadFound($id, $em);
+        }
         $this->denyAccessUnlessGranted(ActividadVoter::ACCESS, $actividad);
-        return $this->getViewHandler()->handle($this->getViewWithGroups($actividad, "autor"), $request);
+        if ($tareas) {
+            $group = "results";
+        } else {
+            $group = "autor";
+        }
+        return $this->getViewHandler()->handle($this->getViewWithGroups($actividad, $group), $request);
     }
 
     /**

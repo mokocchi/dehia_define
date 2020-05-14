@@ -47,7 +47,7 @@ class Autor implements UserInterface
     /**
      * @ORM\Column(type="string", length=255)
      * @Expose
-     * @Groups({"auth", "autor"})
+     * @Groups({"auth", "autor", "results"})
      */
     private $googleid;
 

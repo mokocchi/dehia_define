@@ -32,7 +32,7 @@ class Tarea
     /**
      * @ORM\Column(type="string", length=255)
      * @Expose
-     * @Groups({"autor", "publico"})
+     * @Groups({"autor", "publico", "results"})
      */
     private $nombre;
 
@@ -55,21 +55,21 @@ class Tarea
      * @ORM\ManyToOne(targetEntity="App\Entity\TipoTarea")
      * @ORM\JoinColumn(nullable=true)
      * @Expose
-     * @Groups({"autor", "publico"})
+     * @Groups({"autor", "publico", "results"})
      */
     private $tipo;
 
     /**
      * @ORM\Column(type="json", nullable=false)
      * @Expose
-     * @Groups({"autor", "publico"})
+     * @Groups({"autor", "publico", "results"})
      */
     private $extra = [];
 
     /**
      * @ORM\Column(type="string", length=255)
      * @Expose
-     * @Groups({"autor", "publico"})
+     * @Groups({"autor", "publico", "results"})
      */
     private $codigo;
 
