@@ -452,137 +452,70 @@ class ActividadesController extends BaseController
         /** @var Actividad $actividad */
         $actividad = $this->checkActividadFound($id, $em);
         $this->denyAccessUnlessGranted(ActividadVoter::OWN, $actividad);
-        if ($actividad->getDefinitiva()) {
-            throw new ApiProblemException(
-                new ApiProblem(
-                    Response::HTTP_BAD_REQUEST,
-                    "No se puede modificar una actividad publicada",
-                    "No se puede modificar la actividad"
-                )
-            );
+
+        if (array_key_exists("definitiva", $data) && !is_null($data["definitiva"])) {
+            if ($data["definitiva"] === false) {
+                throw new ApiProblemException(
+                    new ApiProblem(
+                        Response::HTTP_BAD_REQUEST,
+                        "No se puede poner una actividad como no definitiva",
+                        "No se puede poner una actividad como no definitiva"
+                    )
+                );
+            }
+            if ($data["definitiva"] !== true) {
+                throw new ApiProblemException(
+                    new ApiProblem(
+                        Response::HTTP_BAD_REQUEST,
+                        "Datos inválidos: definitiva",
+                        "Datos inválidos: definitiva"
+                    )
+                );
+            }
+            $actividad->setDefinitiva(true);
+            $this->notifyNewToCollect($actividad);
+            $this->notifyResults($actividad);
         }
 
-        if (array_key_exists("codigo", $data)) {
-            throw new ApiProblemException(
-                new ApiProblem(Response::HTTP_BAD_REQUEST, "No se puede modificar el código de una actividad", "No se puede modificar el código de una actividad")
-            );
-        }
-        if (array_key_exists("nombre", $data) && !is_null($data["nombre"])) {
-            $actividad->setNombre($data["nombre"]);
-        }
-        if (array_key_exists("objetivo", $data) && !is_null($data["objetivo"])) {
-            $actividad->setObjetivo($data["objetivo"]);
+        if (array_key_exists("cerrada", $data) && !is_null($data["cerrada"])) {
+            if (!in_array($data["cerrada"], [true, false])) {
+                throw new ApiProblemException(
+                    new ApiProblem(
+                        Response::HTTP_BAD_REQUEST,
+                        "Datos inválidos: cerrada",
+                        "Datos inválidos: cerrada"
+                    )
+                );
+            }
+            if($data["cerrada"]) {
+                $this->notifyCloseToCollect($actividad);
+            } else {
+                $this->notifyReopenToCollect($actividad);
+            }
+            $actividad->setCerrada($data["cerrada"]);
         }
 
         if (is_null($em)) {
             $em = $this->getDoctrine()->getManager();
         }
 
-        if (array_key_exists("dominio", $data) && !is_null($data["dominio"])) {
-            $dominio = $em->getRepository(Dominio::class)->find($data["dominio"]);
-            $actividad->setDominio($dominio);
-        }
-
-        if (array_key_exists("idioma", $data) && !is_null($data["idioma"])) {
-            $idioma = $em->getRepository(Idioma::class)->find($data["idioma"]);
-            $actividad->setIdioma($idioma);
-        }
-
-        if (array_key_exists("tipoPlanificacion", $data) && !is_null($data["tipoPlanificacion"])) {
-            /** @var TipoPlanificacion */
-            $tipoPlanificacion = $em->getRepository(TipoPlanificacion::class)->find($data["tipoPlanificacion"]);
-            $actividad->setTipoPlanificacion($tipoPlanificacion);
-            if ($tipoPlanificacion->getNombre() != self::BIFURCADA_NAME) {
-                $planificacion = $actividad->getPlanificacion();
-                $saltos = $planificacion->getSaltos();
-                foreach ($saltos as $salto) {
-                    $planificacion->removeSalto($salto);
-                }
-            }
-        }
-
         if (array_key_exists("estado", $data) && !is_null($data["estado"])) {
             $estado = $em->getRepository(Estado::class)->find($data["estado"]);
+            if (is_null($estado)) {
+                throw new ApiProblemException(
+                    new ApiProblem(
+                        Response::HTTP_BAD_REQUEST,
+                        "Datos inválidos: estado",
+                        "Datos inválidos: estado"
+                    )
+                );
+            }
             $actividad->setEstado($estado);
         }
+
         $em->persist($actividad);
         $em->flush();
         return $this->getViewHandler()->handle($this->getViewWithGroups($actividad, "autor"), $request);
-    }
-
-    /**
-     * Publica una actividad
-     * @Rest\Post("/publicadas",name="publish_actividad")
-     * @IsGranted("ROLE_AUTOR")
-     *
-     * @SWG\Response(
-     *     response=401,
-     *     description="No autorizado"
-     * )
-     * 
-     * @SWG\Response(
-     *     response=403,
-     *     description="Permisos insuficientes"
-     * )
-     * 
-     * @SWG\Response(
-     *     response=404,
-     *     description="Actividad no encontrada"
-     * )
-     * 
-     * @SWG\Response(
-     *     response=200,
-     *     description="La actividad fue publicada"
-     * )
-     *
-     * @SWG\Response(
-     *     response=400,
-     *     description="Hubo un problema con la petición"
-     * )
-     * 
-     * @SWG\Response(
-     *     response=500,
-     *     description="Error en el servidor"
-     * )
-     *
-     * @SWG\Parameter(
-     *     required=true,
-     *     name="Authorization",
-     *     in="header",
-     *     type="string",
-     *     description="Bearer token",
-     * )
-     *
-     * @SWG\Tag(name="Actividad")
-     * 
-     * @return Response
-     */
-    public function publishActividad(Request $request)
-    {
-        $data = $this->getJsonData($request);
-        $this->checkRequiredParameters(["actividad"], $data);
-        $actividad = $this->checkActividadFound($data["actividad"]);
-        $this->denyAccessUnlessGranted(ActividadVoter::OWN, $actividad);
-
-        $em = $this->getDoctrine()->getManager();
-        if ($actividad->getDefinitiva()) {
-            throw new ApiProblemException(
-                new ApiProblem(
-                    Response::HTTP_BAD_REQUEST,
-                    "La actividad ya fue publicada",
-                    "La actividad ya fue publicada"
-                )
-            );
-        }
-        $actividad->setDefinitiva(true);
-        $em->persist($actividad);
-        $em->flush();
-
-        //send notification to collect&results
-        $this->notifyNewToCollect($actividad);
-        $this->notifyResults($actividad);
-
-        return $this->handleView($this->view(["actividad" => $actividad->getId()]));
     }
 
     public function notifyNewToCollect($actividad)
@@ -663,82 +596,6 @@ class ActividadesController extends BaseController
         }
     }
 
-    /**
-     * Da de baja una actividad
-     * @Rest\Post("/cerradas",name="close_actividad")
-     * @IsGranted("ROLE_AUTOR")
-     *
-     * @SWG\Response(
-     *     response=401,
-     *     description="No autorizado"
-     * )
-     * 
-     * @SWG\Response(
-     *     response=403,
-     *     description="Permisos insuficientes"
-     * )
-     * 
-     * @SWG\Response(
-     *     response=404,
-     *     description="Actividad no encontrada"
-     * )
-     * 
-     * @SWG\Response(
-     *     response=200,
-     *     description="La actividad fue cerrada"
-     * )
-     *
-     * @SWG\Response(
-     *     response=400,
-     *     description="Hubo un problema con la petición"
-     * )
-     * 
-     * @SWG\Response(
-     *     response=500,
-     *     description="Error en el servidor"
-     * )
-     *
-     * @SWG\Parameter(
-     *     required=true,
-     *     name="Authorization",
-     *     in="header",
-     *     type="string",
-     *     description="Bearer token",
-     * )
-     *
-     * @SWG\Tag(name="Actividad")
-     * 
-     * @return Response
-     */
-    public function closeActividad(Request $request)
-    {
-        $data = $this->getJsonData($request);
-        $this->checkRequiredParameters(["actividad"], $data);
-        $actividad = $this->checkActividadFound($data["actividad"]);
-        $this->denyAccessUnlessGranted(ActividadVoter::OWN, $actividad);
-
-        if ($actividad->getCerrada()) {
-            throw new ApiProblemException(
-                new ApiProblem(
-                    Response::HTTP_BAD_REQUEST,
-                    "La actividad ya está cerrada",
-                    "La actividad ya está cerrada"
-                )
-            );
-        }
-
-        $this->notifyCloseToCollect($actividad);
-
-        $em = $this->getDoctrine()->getManager();
-        $actividad->setCerrada(true);
-        $em->persist($actividad);
-        $em->flush();
-
-        //send notification to collect & results
-
-        return $this->handleView($this->view(["actividad" => $actividad->getId()]));
-    }
-
     public function notifyCloseToCollect(Actividad $actividad)
     {
         $options = [
@@ -771,6 +628,54 @@ class ActividadesController extends BaseController
                         Response::HTTP_SERVICE_UNAVAILABLE,
                         "No se pudo cerrar la actividad",
                         "No se pudo cerrar la actividad"
+                    );
+                }
+            } else {
+                $this->logger->error($e->getMessage());
+                throw new ApiProblemException(
+                    new ApiProblem(
+                        Response::HTTP_SERVICE_UNAVAILABLE,
+                        "El servicio de respuestas no está disponible",
+                        "No se pudo cerrar la actividad"
+                    )
+                );
+            }
+        }
+    }
+
+
+    public function notifyReopenToCollect(Actividad $actividad)
+    {
+        $options = [
+            "headers" => [
+                "Authorization" => $this->getUser()->getToken(),
+                "X-Authorization-OAuth" => $this->getUser()->getOAuth()
+            ],
+            "json" => [
+                "activity" => $actividad->getCodigo(),
+            ]
+        ];
+        try {
+            $this->collectClient->post("/api/v1.0/activities/open", $options);
+        } catch (Exception $e) {
+            if ($e instanceof RequestException) {
+                $response = $e->getResponse();
+                if (!is_null($response)) {
+                    $data = json_decode((string) $response->getBody(), true);
+                    $this->logger->error($data["developer_message"]);
+                    throw new ApiProblemException(
+                        new ApiProblem(
+                            Response::HTTP_SERVICE_UNAVAILABLE,
+                            $data["developer_message"],
+                            "No se pudo reabrir la actividad"
+                        )
+                    );
+                } else {
+                    $this->logger->error($e->getMessage());
+                    throw new ApiProblem(
+                        Response::HTTP_SERVICE_UNAVAILABLE,
+                        "No se pudo reabrir la actividad",
+                        "No se pudo reabrir la actividad"
                     );
                 }
             } else {
