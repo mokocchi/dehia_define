@@ -243,7 +243,13 @@ class PublicActividadesController extends BaseController
                 "initial" => in_array($tarea->getId(), $iniciales),
                 "optional" => in_array($tarea->getId(), $opcionales),
                 "type" => $tarea->getTipo()->getCodigo(),
-                "jumps" => count($jumps) == 0 ? [] : $jumps[$tarea->getId()]
+                "jumps" => count($jumps) == 0 ?
+                    [] //no hay saltos en general
+                    : (count($jumps[$tarea->getId()]) == 0 ? //esta tarea no tiene saltos
+                        (($actividad->getTipoPlanificacion()->getNombre() === "Bifurcada") ?
+                            [["on" => "ALL", "to" => "END", "answer" => null]]
+                            : [])
+                        : $jumps[$tarea->getId()])
             ];
             foreach ($tarea->getExtra() as $key => $value) {
                 $task[$key] = $value;
