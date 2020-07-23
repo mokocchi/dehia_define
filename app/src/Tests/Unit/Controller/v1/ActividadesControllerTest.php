@@ -249,8 +249,8 @@ class ActividadesControllerTest extends TestCase
     public function makeActividadPatchRequest($actividadArray)
     {
         $jsonArray = [];
-        if (array_key_exists("nombre", $actividadArray)) {
-            $jsonArray["nombre"] = $actividadArray["nombre"];
+        if (array_key_exists("definitiva", $actividadArray)) {
+            $jsonArray["definitiva"] = $actividadArray["definitiva"];
         }
         if (array_key_exists("codigo", $actividadArray)) {
             $jsonArray["codigo"] = $actividadArray["codigo"];
@@ -275,13 +275,13 @@ class ActividadesControllerTest extends TestCase
     /* Test patch */
     public function testPatchActividadAction()
     {
-        $request = $this->makeActividadPatchRequest(["nombre" => "Actividad patch"]);
+        $request = $this->makeActividadPatchRequest(["definitiva" => true]);
 
         $actividad = new Actividad();
         $actividad->setNombre("Actividad test");
         $actividad->setObjetivo("Probar la modificación de actividades");
         $actividad->setCodigo("1234");
-        
+
         $autor = new Autor();
         $actividad->setAutor($autor);
 
@@ -315,11 +315,13 @@ class ActividadesControllerTest extends TestCase
         $result = $controller->patchActividadAction($request, 1, $entityManagerMock);
         $data = json_decode($result->getContent(), true);
         $this->assertArrayHasKey("nombre", $data);
-        $this->assertEquals("Actividad patch", $data["nombre"]);
+        $this->assertEquals("Actividad test", $data["nombre"]);
         $this->assertArrayHasKey("objetivo", $data);
         $this->assertEquals("Probar la modificación de actividades", $data["objetivo"]);
         $this->assertArrayHasKey("codigo", $data);
         $this->assertEquals("1234", $data["codigo"]);
+        $this->assertArrayHasKey("definitiva", $data);
+        $this->assertEquals(true, $data["definitiva"]);
     }
 
     public function testPatchMissingJson()
@@ -360,7 +362,7 @@ class ActividadesControllerTest extends TestCase
         $actividad->setCodigo("1234");
 
         $request = $this->makeActividadPatchRequest(["codigo" => "5678"]);
-        
+
         $autor = new Autor();
         $actividad->setAutor($autor);
 
@@ -391,22 +393,18 @@ class ActividadesControllerTest extends TestCase
         $controller = new ActividadesController($this->loggerMock, $this->serializerMock);
         $controller->setContainer(static::$container);
 
-        try {
-            $controller->patchActividadAction($request, 1, $entityManagerMock);
-            $this->fail("No se detectó que se trató de cambiar el código");
-        } catch (ApiProblemException $e) {
-            $apiProblem = $e->getApiProblem();
-            $this->assertEquals("No se puede modificar el código de una actividad", $apiProblem->getDeveloperMessage());
-            $this->assertEquals("No se puede modificar el código de una actividad", $apiProblem->getUserMessage());
-        }
+        $result = $controller->patchActividadAction($request, 1, $entityManagerMock);
+        $data = json_decode($result->getContent(), true);
+        $this->assertArrayHasKey("codigo", $data);
+        $this->assertEquals("1234", $data["codigo"]);
     }
 
     public function testPatchActividadNotFound()
     {
         $request = $this->makeActividadPatchRequest(["nombre" => "Actividad Patch"]);
-        
+
         $autor = new Autor();
- 
+
         /** @var EntityManager&MockObject $entityManagerMock */
         $entityManagerMock = $this->createMock(EntityManager::class);
 
@@ -533,5 +531,43 @@ class ActividadesControllerTest extends TestCase
         $this->assertEquals("Privado", $data["estado"]["nombre"]);
         $this->assertEquals("Autor", $data["autor"]["nombre"]);
         $this->assertEquals($this->generateUrl("show_actividad", ["id" => $data["id"]]), $data['_links']['self']);
+    }
+
+    public function testShowActividadNotFoundAction()
+    {
+        $request = new Request();
+        $request->setRequestFormat('json');
+
+        /** @var EntityManager&MockObject $entityManagerMock */
+        $entityManagerMock = $this->createMock(EntityManager::class);
+
+        /** @var ActividadRepository&MockObject $actividadArray */
+        $actividadRepositoryMock = $this->createMock(ActividadRepository::class);
+        $actividadRepositoryMock
+            ->expects($this->atLeastOnce())
+            ->method('find')
+            ->willReturn(null);
+
+        $entityManagerMock
+            ->expects($this->atLeastOnce())
+            ->method('getRepository')
+            ->willReturn($actividadRepositoryMock);
+
+        $autor = new Autor();
+        $autor->setNombre("Autor");
+
+        $token = new UsernamePasswordToken($autor, null, "test", ["ROLE_AUTOR"]);
+        self::$container->get('security.token_storage')->setToken($token);
+
+        $controller = new ActividadesController($this->loggerMock, $this->serializerMock);
+        $controller->setContainer(static::$container);
+        try {
+            $controller->showActividadAction(0, $request, $entityManagerMock);
+            $this->fail("No se detectó que la actividad no existe");
+        } catch (ApiProblemException $e) {
+            $apiProblem = $e->getApiProblem();
+            $this->assertEquals("No se encontró: Actividad 0", $apiProblem->getDeveloperMessage());
+            $this->assertEquals("No se encontró: Actividad", $apiProblem->getUserMessage());
+        }
     }
 }

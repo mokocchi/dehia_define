@@ -453,6 +453,14 @@ class ActividadesController extends BaseController
         $actividad = $this->checkActividadFound($id, $em);
         $this->denyAccessUnlessGranted(ActividadVoter::OWN, $actividad);
 
+        $persist = false;
+        $mock = true;
+
+        if (is_null($em)) {
+            $mock = false;
+            $em = $this->getDoctrine()->getManager();
+        }
+
         if (array_key_exists("definitiva", $data) && !is_null($data["definitiva"])) {
             if ($data["definitiva"] === false) {
                 throw new ApiProblemException(
@@ -473,8 +481,11 @@ class ActividadesController extends BaseController
                 );
             }
             $actividad->setDefinitiva(true);
-            $this->notifyNewToCollect($actividad);
-            $this->notifyResults($actividad);
+            $persist = true;
+            if (!$mock){
+                $this->notifyNewToCollect($actividad);
+                $this->notifyResults($actividad);
+            }
         }
 
         if (array_key_exists("cerrada", $data) && !is_null($data["cerrada"])) {
@@ -487,16 +498,15 @@ class ActividadesController extends BaseController
                     )
                 );
             }
-            if($data["cerrada"]) {
-                $this->notifyCloseToCollect($actividad);
-            } else {
-                $this->notifyReopenToCollect($actividad);
+            if (!$mock) {
+                if($data["cerrada"]) {
+                    $this->notifyCloseToCollect($actividad);
+                } else {
+                    $this->notifyReopenToCollect($actividad);
+                }
             }
             $actividad->setCerrada($data["cerrada"]);
-        }
-
-        if (is_null($em)) {
-            $em = $this->getDoctrine()->getManager();
+            $persist = true;
         }
 
         if (array_key_exists("estado", $data) && !is_null($data["estado"])) {
@@ -511,10 +521,13 @@ class ActividadesController extends BaseController
                 );
             }
             $actividad->setEstado($estado);
+            $persist = true;
         }
 
-        $em->persist($actividad);
-        $em->flush();
+        if ($persist) {
+            $em->persist($actividad);
+            $em->flush();
+        }
         return $this->getViewHandler()->handle($this->getViewWithGroups($actividad, "autor"), $request);
     }
 
