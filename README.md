@@ -1,4 +1,4 @@
-# DEHIA Auth Service
+# DEHIA Define Service
 The Define service for [DEHIA](http://sedici.unlp.edu.ar/handle/10915/116617), a platform for managing and executing data collection activities that require human intervention.
 
 ## Contents
