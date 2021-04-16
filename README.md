@@ -39,11 +39,7 @@ Docker variablas go in the `.env` file. PHP variables go in the `app/.env.local`
 - **MYSQL_USER**: database user to be created for the application. It must match the URL in `app/.env.local`
 - **MYSQL_PASSWORD**: password for the aforementioned database user. It must match the URL in `app/.env.local`
 - **ADMINER_PORT**: port to be exposed for adminer user (DB client).
-<<<<<<< Updated upstream
-- **LOCAL_USER**: user in the docker system. The same id of the host user is preferred (because of the volume sharing the files)
-=======
 - **LOCAL_USER**: user in the container system. The same id of the host user is preferred (because of the volume sharing the files)
->>>>>>> Stashed changes
 ## PHP variables
 - **DATABASE_URL**: template for the MySQL URL. The placeholders must be filled with the information in the docker `.env` file.
 
