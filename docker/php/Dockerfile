@@ -1,26 +1,34 @@
-FROM php:7.4-fpm
+FROM php:7.4-fpm-alpine
+
+RUN apk update && apk add libzip-dev
+
+RUN docker-php-ext-install zip
+
+RUN apk add --no-cache \
+    $PHPIZE_DEPS \
+    && pecl install apcu \
+    && docker-php-ext-enable apcu
 
 RUN docker-php-ext-install pdo_mysql
 
-RUN pecl install apcu
-
-RUN apt-get update && \
-apt-get install -y \
-libzip-dev
-
-RUN docker-php-ext-install zip
-RUN docker-php-ext-enable apcu
-
 RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
-    && php -r "if (hash_file('SHA384', 'composer-setup.php') === 'e0012edf3e80b6978849f5eff0d4b4e4c79ff1609dd1e613307e16318854d24ae64f26d17af3ef0bf7cfb710ca74755a') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;" \
     && php composer-setup.php --filename=composer \
     && php -r "unlink('composer-setup.php');" \
     && mv composer /usr/local/bin/composer
 
 WORKDIR /usr/src/app
 
-COPY . /usr/src/app
+COPY ./app /usr/src/app
 
-RUN PATH=$PATH:/usr/src/apps/vendor/bin:bin
+RUN chown -R 1000 /usr/src/app
+RUN chgrp -R 1000 /usr/src/app
 
-RUN mkdir /.composer && chown 1001 /.composer && chgrp 1001 /.composer
+RUN mkdir /.composer && chown 1000 /.composer && chgrp 1000 /.composer
+
+USER 1000:1000
+
+RUN ["composer", "install"]
+
+RUN PATH=$PATH:/usr/src/app/vendor/bin:bin
+
+CMD ["/bin/sh", "-c", "bin/console doctrine:database:create --if-not-exists; bin/console doctrine:migrations:migrate; php-fpm"]

@@ -2,7 +2,7 @@ version: '3.3'
 services:
  define.php:
    volumes:
-     - './app:/usr/src/app'
+     - './app/src:/usr/src/app/src'
 
  define.nginx:
    volumes:

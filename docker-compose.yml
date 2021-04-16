@@ -20,6 +20,8 @@ services:
     container_name: define.mysql.test
     image: mysql:8.0
     restart: on-failure
+    depends_on: 
+      - define.nginx
     expose: 
       - 3306
     environment:
@@ -37,6 +39,8 @@ services:
     build:
       context: .
       dockerfile: docker/php/Dockerfile
+    depends_on: 
+      - define.adminer
     restart: on-failure
     user: ${LOCAL_USER}
     expose: 
@@ -49,7 +53,7 @@ services:
 
   define.nginx:
     container_name: define.nginx
-    image: nginx:1.15.3-alpine
+    image: nginx:1.17-alpine
     restart: on-failure
     depends_on:
       - define.php
@@ -61,7 +65,9 @@ services:
 
   define.adminer:
     container_name: define.adminer
-    image: adminer
+    image: adminer:4.8.0
+    depends_on: 
+      - define.mysql
     restart: on-failure
     networks: 
       - backend
