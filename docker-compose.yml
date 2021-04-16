@@ -4,8 +4,6 @@ services:
     container_name: define.mysql
     image: mysql:8.0
     restart: on-failure
-    expose: 
-      - 3306
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
@@ -40,7 +38,11 @@ services:
       context: .
       dockerfile: docker/php/Dockerfile
     depends_on: 
-      - define.adminer
+      - define.mysql
+    environment: 
+      WAIT_HOSTS: define.mysql:3306
+      WAIT_SLEEP_INTERVAL: 5
+      WAIT_BEFORE_HOSTS: 5
     restart: on-failure
     user: ${LOCAL_USER}
     expose: 

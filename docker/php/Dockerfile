@@ -25,10 +25,15 @@ RUN chgrp -R 1000 /usr/src/app
 
 RUN mkdir /.composer && chown 1000 /.composer && chgrp 1000 /.composer
 
+ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.8.0/wait /tmp/wait
+RUN chmod +x /tmp/wait
+RUN chown 1000 /tmp/wait
+RUN chgrp 1000 /tmp/wait
+
 USER 1000:1000
 
 RUN ["composer", "install"]
 
 RUN PATH=$PATH:/usr/src/app/vendor/bin:bin
 
-CMD ["/bin/sh", "-c", "bin/console doctrine:database:create --if-not-exists; bin/console doctrine:migrations:migrate; php-fpm"]
+CMD ["/bin/sh", "-c", "/tmp/wait && bin/console doctrine:database:create --if-not-exists; bin/console doctrine:migrations:migrate; php-fpm"]

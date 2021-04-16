@@ -21,19 +21,15 @@ There is also an API that manages the activities lifecycle, collects the data fr
 You can install the service either in containerized version using Docker or locally (on Linux) using PHP7.4 and Apache or NGINX. The database can be external o
 ### Docker (recommended)
  1. Create an `app/.env.local` file based in `app/.env` (See [Environment Variables](#Environment-Variables))
- 2. If the results service or the gateway are also run with docker, take note of the docker network.
- 3. Build the image: 
-
+ 2. Start the mysql container to initialize it. This can take up to 5 minutes (only needed once).
  ```
- docker image build -t <image-tag> .
+ docker-compose up auth.mysql
  ```
- 4. Run the container - Only if needed: a) Expose the port you set in the `.env` file (if the gateway or the results service aren't run with Docker) b) Use a Docker network (if the gateway or the results service are run with docker). If one is run with Docker and the not the other, you will need both.
+ 3. In another terminal, start the rest of the containers.
  ```
- docker run -e PORT=<container-port> --name <container-name> [-p <host-port>:<container-port>] [--network <dehia-network>] <image-tag>
+ docker-compose up
  ```
- 5. Go to `http://localhost:<host-port>`. You should see a "Define Index" message.
- 6. Now you can add the URL to the results service and the gateway.
-
+ 4. Now you can add the URL to the gateway.
 ## Run locally (Linux)
 # Environment Variables
 Docker variablas go in the `.env` file. PHP variables go in the `app/.env.local` file.
