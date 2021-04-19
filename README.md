@@ -23,7 +23,7 @@ You can install the service either in containerized version using Docker or loca
  1. Create an `app/.env.local` file based in `app/.env` (See [Environment Variables](#Environment-Variables))
  2. Start the mysql container to initialize it. This can take up to 5 minutes (only needed once).
  ```
- docker-compose up auth.mysql
+ docker-compose up define.mysql
  ```
  3. In another terminal, start the rest of the containers.
  ```
