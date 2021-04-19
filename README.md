@@ -20,7 +20,7 @@ There is also an API that manages the activities lifecycle, collects the data fr
 ## Installation
 You can install the service either in containerized version using Docker or locally (on Linux) using PHP7.4 and Apache or NGINX. The database can be the one included in the docker-compose file or an external one.
 ### Docker (recommended)
- 1. Create an `app/.env.local` file based in `app/.env` (See [Environment Variables](#Environment-Variables))
+ 1. Create an `app/.env.local` file based on `app/.env` and a `.env` file based on `.env.dist` (See [Environment Variables](#Environment-Variables))
  2. Start the mysql container to initialize it. This can take up to 5 minutes (only needed once).
  ```
  docker-compose up define.mysql
