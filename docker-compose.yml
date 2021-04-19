@@ -45,8 +45,6 @@ services:
       WAIT_BEFORE_HOSTS: 5
     restart: on-failure
     user: ${LOCAL_USER}
-    expose: 
-      - 9000
     networks: 
       dehia:
       backend:
