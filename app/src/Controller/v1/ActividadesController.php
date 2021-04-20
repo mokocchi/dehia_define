@@ -538,7 +538,8 @@ class ActividadesController extends BaseController
             $tarea = $actividadTarea->getTarea();
             $tareas[] = [
                 "code" => $tarea->getCodigo(),
-                "type" => $tarea->getTipo()->getCodigo()
+                "type" => $tarea->getTipo()->getCodigo(),
+                "extra" => $tarea->getExtra()
             ];
         }
         $options = [
