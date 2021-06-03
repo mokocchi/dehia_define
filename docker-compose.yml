@@ -43,6 +43,7 @@ services:
       WAIT_HOSTS: define.mysql:3306
       WAIT_SLEEP_INTERVAL: 5
       WAIT_BEFORE_HOSTS: 5
+      WAIT_TIMEOUT: 350
     restart: on-failure
     user: ${LOCAL_USER}
     networks: 
