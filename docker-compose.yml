@@ -38,11 +38,26 @@ services:
       context: .
       dockerfile: docker/php/Dockerfile
     depends_on: 
-      - define.mysql
+      - ${MYSQL_HOST}
     environment: 
-      WAIT_HOSTS: define.mysql:3306
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_HOST: ${MYSQL_HOST}
+      SITE_BASE_URL: ${SITE_BASE_URL}
+      AUTH_BASE_URL: ${AUTH_BASE_URL}
+      COLLECT_BASE_URL: ${COLLECT_BASE_URL}
+      RESULTS_BASE_URL: ${RESULTS_BASE_URL}
+
+      MYSQL_TEST_DATABASE: ${MYSQL_TEST_DATABASE}
+      MYSQL_TEST_PASSWORD: ${MYSQL_TEST_PASSWORD}
+      MYSQL_TEST_USER: ${MYSQL_TEST_USER}
+      MYSQL_TEST_HOST: ${MYSQL_TEST_HOST}
+      SITE_BASE_URL_TEST: ${SITE_BASE_URL_TEST}
+      AUTH_BASE_URL_TEST: ${AUTH_BASE_URL_TEST}
+      WAIT_HOSTS: ${MYSQL_HOST}:3306
       WAIT_SLEEP_INTERVAL: 5
-      WAIT_BEFORE_HOSTS: 5
+      WAIT_BEFORE: 10
       WAIT_TIMEOUT: 350
     restart: on-failure
     user: ${LOCAL_USER}
