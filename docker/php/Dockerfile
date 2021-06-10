@@ -17,10 +17,7 @@ RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
     && mv composer /usr/local/bin/composer
 
 
-COPY ./app /usr/src/app
-
-RUN chown -R 1000 /usr/src/app
-RUN chgrp -R 1000 /usr/src/app
+COPY --chown=1000:1000 ./app /usr/src/app
 
 WORKDIR /usr/src/app
 

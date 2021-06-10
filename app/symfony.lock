@@ -1,7 +1,4 @@
 {
-    "babdev/pagerfanta-bundle": {
-        "version": "v3.2.0"
-    },
     "doctrine/annotations": {
         "version": "1.0",
         "recipe": {
@@ -243,8 +240,8 @@
             "config/packages/oneup_flysystem.yaml"
         ]
     },
-    "pagerfanta/core": {
-        "version": "v3.1.0"
+    "pagerfanta/pagerfanta": {
+        "version": "v2.7.1"
     },
     "phar-io/manifest": {
         "version": "2.0.1"
@@ -609,6 +606,19 @@
     "symfony/test-pack": {
         "version": "v1.0.6"
     },
+    "symfony/translation": {
+        "version": "3.3",
+        "recipe": {
+            "repo": "github.com/symfony/recipes",
+            "branch": "master",
+            "version": "3.3",
+            "ref": "2ad9d2545bce8ca1a863e50e92141f0b9d87ffcd"
+        },
+        "files": [
+            "config/packages/translation.yaml",
+            "translations/.gitignore"
+        ]
+    },
     "symfony/translation-contracts": {
         "version": "v2.0.1"
     },
@@ -668,6 +678,9 @@
     },
     "webmozart/assert": {
         "version": "1.7.0"
+    },
+    "white-october/pagerfanta-bundle": {
+        "version": "v1.3.2"
     },
     "willdurand/jsonp-callback-validator": {
         "version": "v1.1.0"
