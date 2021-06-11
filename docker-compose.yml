@@ -14,12 +14,12 @@ services:
         aliases:
           - define.mysql
 
-  define.php:
-    container_name: define.php
+  define.app:
+    container_name: define.app
     image: mokocchi/dehia-define
     # build:
     #   context: .
-    #   dockerfile: docker/php/Dockerfile
+    #   dockerfile: Dockerfile
     depends_on: 
       - ${MYSQL_HOST}
     environment: 
@@ -36,27 +36,11 @@ services:
       WAIT_BEFORE: 10
       WAIT_TIMEOUT: 350
     restart: on-failure
-    user: ${LOCAL_USER}
     networks: 
-      dehia:
-      backend:
-        aliases:
-          - define.php
-
-  define.nginx:
-    container_name: define.nginx
-    image: nginx:1.17-alpine
-    restart: on-failure
-    depends_on:
-      - define.php
-    volumes:
-     - './app/public/:/usr/src/app'
-     - './docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro'
-    networks:
       backend:
       dehia:
         aliases:
-          - define.nginx
+          - define.app
 
 networks:
   dehia:
